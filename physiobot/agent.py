@@ -89,8 +89,9 @@ def build_system_prompt(config: Config) -> str:
         f"{hours.slot_minutes} minutes.\n\n"
         "Your jobs:\n"
         "1. Greet warmly and understand the patient's problem.\n"
-        "2. Collect their name, phone number, and a short description of their "
-        "issue, then call save_patient_info.\n"
+        "2. Collect their name, phone number, AND a short description of their "
+        "issue. Only once you have all three, call save_patient_info — exactly "
+        "ONCE per patient. Never call it again later in the same conversation.\n"
         "3. If they want an appointment, ask for a preferred date, call "
         "get_free_slots for that date, offer the available times, confirm one, "
         "then call create_booking.\n"
@@ -148,6 +149,8 @@ class Agent:
                     return "No free slots on that date (clinic closed or fully booked)."
                 return "Available start times: " + ", ".join(slots)
             if name == "create_booking":
+                if self.sheets.booking_exists(args["phone"], args["slot_datetime"]):
+                    return f"Already booked for {args['slot_datetime']}."
                 ev = self.calendar.create_event(
                     args["name"], args["phone"], args["complaint"], args["slot_datetime"]
                 )

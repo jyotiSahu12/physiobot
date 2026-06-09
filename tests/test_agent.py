@@ -24,6 +24,9 @@ class FakeSheets:
     def append_booking(self, name, phone, complaint, slot, event_id):
         self.bookings.append((name, phone, complaint, slot, event_id))
 
+    def booking_exists(self, phone, slot):
+        return any(b[1] == phone and b[3] == slot for b in self.bookings)
+
 
 class FakeCalendar:
     def __init__(self, slots=None):
@@ -77,6 +80,30 @@ def test_booking_flow(config):
     reply = agent.respond([{"role": "user", "content": "book me on Jan 10"}])
     assert sheets.bookings == [("Ravi", "9100", "back", "2030-01-10T10:00", "evt123")]
     assert "booked" in reply.lower()
+
+
+def test_create_booking_is_idempotent(config):
+    """If the model re-calls create_booking for the same phone+slot, no second
+    calendar event / row is created."""
+    sheets = FakeSheets()
+    cal = FakeCalendar()
+    create_calls = {"n": 0}
+    orig = cal.create_event
+    def counting(*a, **k):
+        create_calls["n"] += 1
+        return orig(*a, **k)
+    cal.create_event = counting
+    booking = {"name": "Ravi", "phone": "9100", "complaint": "back",
+               "slot_datetime": "2030-01-10T10:00"}
+    provider = FakeProvider([
+        _asst(tool_calls=[_call("c1", "create_booking", booking)]),
+        _asst(tool_calls=[_call("c2", "create_booking", booking)]),  # duplicate
+        _asst("Done."),
+    ])
+    agent = Agent(config, sheets=sheets, calendar=cal, provider=provider)
+    agent.respond([{"role": "user", "content": "book"}])
+    assert create_calls["n"] == 1
+    assert len(sheets.bookings) == 1
 
 
 def test_tool_result_threads_tool_call_id(config):

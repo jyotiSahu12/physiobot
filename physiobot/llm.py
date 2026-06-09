@@ -16,8 +16,37 @@ and JSON-string arguments). This keeps `agent.py` free of provider quirks.
 from __future__ import annotations
 
 import json
+import re
 
 from .config import Config
+
+# Llama-3.3 on Groq occasionally emits a tool call as text instead of a proper
+# function call, which Groq rejects with a 400 "tool_use_failed". The malformed
+# text looks like:  <function=save_patient_info {"name": "..."}</function>
+_FAILED_FN_RE = re.compile(r"<function=([^\s>]+)\s*(\{.*?\})\s*</function>", re.DOTALL)
+
+
+def _failed_generation(err) -> str | None:
+    body = getattr(err, "body", None)
+    if isinstance(body, dict):
+        return (body.get("error") or {}).get("failed_generation")
+    return None
+
+
+def _is_tool_use_failed(err) -> bool:
+    return bool(_failed_generation(err)) or "tool_use_failed" in str(err)
+
+
+def _salvage_tool_calls(failed_generation: str) -> list[dict]:
+    """Recover canonical tool calls from a malformed Groq generation."""
+    calls = []
+    for i, m in enumerate(_FAILED_FN_RE.finditer(failed_generation or "")):
+        try:
+            args = json.loads(m.group(2))
+        except json.JSONDecodeError:
+            continue
+        calls.append({"id": f"salvage_{i}", "name": m.group(1), "arguments": args})
+    return calls
 
 
 # --- canonical <-> provider conversions -----------------------------------
@@ -93,20 +122,37 @@ class GroqProvider:
             client = Groq(api_key=api_key)
         self.client = client
 
-    def chat(self, messages: list[dict], tools: list | None = None) -> dict:
+    def chat(self, messages: list[dict], tools: list | None = None,
+             _retries: int = 2) -> dict:
         kwargs = {"model": self.model, "messages": _to_groq(messages)}
         if tools:
             kwargs["tools"] = tools
             kwargs["tool_choice"] = "auto"
-        resp = self.client.chat.completions.create(**kwargs)
-        msg = resp.choices[0].message
-        calls = []
-        for tc in (msg.tool_calls or []):
-            args = tc.function.arguments
-            if isinstance(args, str):
-                args = json.loads(args or "{}")
-            calls.append({"id": tc.id, "name": tc.function.name, "arguments": args})
-        return {"role": "assistant", "content": msg.content or "", "tool_calls": calls}
+
+        last_err = None
+        for _ in range(_retries + 1):
+            try:
+                resp = self.client.chat.completions.create(**kwargs)
+                msg = resp.choices[0].message
+                calls = []
+                for tc in (msg.tool_calls or []):
+                    args = tc.function.arguments
+                    if isinstance(args, str):
+                        args = json.loads(args or "{}")
+                    calls.append({"id": tc.id, "name": tc.function.name, "arguments": args})
+                return {"role": "assistant", "content": msg.content or "",
+                        "tool_calls": calls}
+            except Exception as e:
+                if not _is_tool_use_failed(e):
+                    raise
+                last_err = e  # malformed tool call — re-sample and retry
+
+        # Retries exhausted: salvage the tool call from the malformed text.
+        salvaged = _salvage_tool_calls(_failed_generation(last_err) or "")
+        if salvaged:
+            return {"role": "assistant", "content": "", "tool_calls": salvaged}
+        return {"role": "assistant",
+                "content": "Sorry, could you say that once more?", "tool_calls": []}
 
 
 def get_provider(config: Config):

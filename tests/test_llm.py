@@ -1,7 +1,11 @@
 import json
 from types import SimpleNamespace
 
-from physiobot.llm import GroqProvider, OllamaProvider, _to_groq, _to_ollama
+import pytest
+
+from physiobot.llm import (
+    GroqProvider, OllamaProvider, _salvage_tool_calls, _to_groq, _to_ollama,
+)
 
 
 # --- Ollama -----------------------------------------------------------------
@@ -61,6 +65,54 @@ def test_groq_normalizes_and_parses_json_args():
         {"id": "call_abc", "name": "save_patient_info",
          "arguments": {"name": "Sam", "phone": "5"}}
     ]
+
+
+def test_salvage_parses_malformed_groq_generation():
+    # the exact shape Groq returned in the live run
+    text = '<function=save_patient_info {"name": "Asha", "phone": "9199", "complaint": "ankle pain"}</function>'
+    calls = _salvage_tool_calls(text)
+    assert calls == [{"id": "salvage_0", "name": "save_patient_info",
+                      "arguments": {"name": "Asha", "phone": "9199", "complaint": "ankle pain"}}]
+
+
+class _ToolUseFailedError(Exception):
+    def __init__(self, failed_generation):
+        super().__init__("tool_use_failed")
+        self.body = {"error": {"code": "tool_use_failed",
+                               "failed_generation": failed_generation}}
+
+
+class FailingGroqClient:
+    """Always raises tool_use_failed, like Groq does for a malformed call."""
+    def __init__(self, failed_generation):
+        class _Completions:
+            def create(_self, **kwargs):
+                raise _ToolUseFailedError(failed_generation)
+        self.chat = SimpleNamespace(completions=_Completions())
+
+
+def test_groq_salvages_after_retries_exhausted():
+    fg = '<function=get_free_slots {"date": "2030-01-10"}</function>'
+    p = GroqProvider("m", "key", client=FailingGroqClient(fg))
+    out = p.chat([{"role": "user", "content": "slots?"}], tools=[{"type": "function"}],
+                 _retries=1)
+    assert out["tool_calls"] == [
+        {"id": "salvage_0", "name": "get_free_slots", "arguments": {"date": "2030-01-10"}}
+    ]
+
+
+class RaisingGroqClient:
+    def __init__(self, exc):
+        class _Completions:
+            def create(_self, **kwargs):
+                raise exc
+        self.chat = SimpleNamespace(completions=_Completions())
+
+
+def test_groq_reraises_non_tool_use_errors():
+    p = GroqProvider("m", "key", client=RaisingGroqClient(ValueError("boom")))
+    with pytest.raises(ValueError):
+        p.chat([{"role": "user", "content": "hi"}], tools=[{"type": "function"}], _retries=0)
 
 
 def test_to_groq_requires_id_and_tool_call_id():
