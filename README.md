@@ -62,6 +62,33 @@ WhatsApp ─▶ /webhook ─▶ orchestrator ─▶ agent (Ollama + tools) ─�
 4. Set `WHATSAPP_APP_SECRET` in `.env` to enable signature verification.
 5. Message the test number from your phone — the bot replies.
 
+## Deploy to the cloud (Render + Groq) — always-on, no tunnel
+
+Running 24/7 means the LLM can't be local Ollama (a cloud host can't reach your
+laptop), so the deploy uses **Groq** for the brain. This is controlled by the
+`LLM_PROVIDER` env var — local stays `ollama`, the cloud is `groq`.
+
+1. **Get a free Groq key** at https://console.groq.com/keys.
+2. **Push this repo to GitHub** (done: `github.com/jyotiSahu12/physiobot`).
+3. In **Render** → *New* → *Blueprint* → pick this repo. It reads `render.yaml`.
+4. Set the secret env vars in the Render dashboard (marked `sync: false`):
+   - `GROQ_API_KEY` — your Groq key
+   - `GOOGLE_CREDENTIALS_JSON` — the **entire** service-account JSON, pasted as
+     the value (copy it with `pbcopy < ~/Downloads/physiochatbot-*.json`)
+   - `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_APP_SECRET`
+   - (`LLM_PROVIDER=groq` and `WHATSAPP_VERIFY_TOKEN=physiobot-verify` are
+     already set by the blueprint.)
+5. Deploy. Render gives you a public URL like `https://physiobot.onrender.com`.
+6. In the Meta dashboard, set the webhook callback to
+   `https://physiobot.onrender.com/webhook`, verify token `physiobot-verify`,
+   and subscribe to `messages`.
+
+Notes:
+- Free Render web services **sleep after ~15 min idle**; the first message after
+  a quiet spell is delayed ~50s while it wakes (Meta retries, so it arrives).
+- SQLite conversation memory is on Render's ephemeral disk and resets on
+  redeploy — bookings/patients are safe because they live in Google.
+
 ## Tests
 
 ```bash
