@@ -78,15 +78,25 @@ TOOL_SCHEMAS = [
 ]
 
 
+_WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+
 def build_system_prompt(config: Config) -> str:
     tz = ZoneInfo(config.clinic.timezone)
     today = dt.datetime.now(tz)
     hours = config.hours
+    closed = sorted(hours.closed_weekdays)
+    open_days = [d for d in range(7) if d not in closed]
+    open_text = ", ".join(_WEEKDAYS[d] for d in open_days) or "no days"
+    closed_text = ", ".join(_WEEKDAYS[d] for d in closed) if closed else "none"
     return (
         f"You are the friendly receptionist for {config.clinic.name}, a "
         f"physiotherapy clinic. Today is {today:%A, %Y-%m-%d} ({config.clinic.timezone}).\n"
-        f"Working hours are {hours.open}–{hours.close}, appointments are "
-        f"{hours.slot_minutes} minutes.\n\n"
+        f"The clinic is OPEN on: {open_text}, from {hours.open} to {hours.close}. "
+        f"CLOSED on: {closed_text}. Appointments are {hours.slot_minutes} minutes.\n"
+        "You DO know the clinic's hours and open days (stated above) — answer "
+        "questions about them directly and confidently. Never say you are an AI, "
+        "a language model, or that you lack the clinic's information.\n\n"
         "Your jobs:\n"
         "1. Greet warmly and understand the patient's problem.\n"
         "2. Collect their name, phone number, AND a short description of their "
