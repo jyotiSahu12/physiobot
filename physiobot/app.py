@@ -20,10 +20,15 @@ app = FastAPI(title="PhysioBot")
 config = get_config()
 orchestrator = Orchestrator(config)
 
+# Bump on each meaningful deploy so /healthz tells us exactly what's live.
+BUILD = "2026-06-09-3-days-prompt"
+
 
 @app.get("/healthz")
 def healthz():
-    return {"status": "ok", "meta_configured": config.meta.configured}
+    return {"status": "ok", "build": BUILD,
+            "provider": config.llm.provider,
+            "meta_configured": config.meta.configured}
 
 
 @app.get("/webhook")
