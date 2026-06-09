@@ -1,0 +1,27 @@
+# Render Blueprint — deploy PhysioBot as a free web service.
+# In Render: New > Blueprint, point it at this repo. Then set the `sync: false`
+# secrets in the dashboard (they are NOT stored in git).
+services:
+  - type: web
+    name: physiobot
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn physiobot.app:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: LLM_PROVIDER
+        value: groq                # cloud uses Groq, not local Ollama
+      - key: WHATSAPP_VERIFY_TOKEN
+        value: physiobot-verify
+      - key: GROQ_API_KEY
+        sync: false                # set in dashboard
+      - key: GOOGLE_CREDENTIALS_JSON
+        sync: false                # paste the FULL service-account JSON as the value
+      - key: WHATSAPP_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_APP_SECRET
+        sync: false

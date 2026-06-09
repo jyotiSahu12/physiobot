@@ -1,0 +1,32 @@
+# PhysioBot configuration (committed — no secrets here).
+
+clinic:
+  name: "Dr. Sahu's Physiotherapy Clinic"   # TODO: set the real clinic name
+  contact_number: "+91-90000-00000"          # TODO: set your sister's clinic number (shared in chat)
+  timezone: "Asia/Kolkata"
+
+# Working hours the agent can book within (24h local time).
+hours:
+  open: "10:00"
+  close: "19:00"
+  slot_minutes: 45
+  # Days the clinic is closed (0=Mon ... 6=Sun). Example: Sunday closed.
+  closed_weekdays: [6]
+
+llm:
+  # "ollama" for local dev (free, private). "groq" for the cloud deploy.
+  # Overridable at runtime with the LLM_PROVIDER env var (Render sets it to "groq").
+  provider: "ollama"
+  ollama_model: "qwen2.5"
+  ollama_host: "http://localhost:11434"
+  groq_model: "llama-3.3-70b-versatile"   # GROQ_API_KEY comes from the environment
+  max_tool_iterations: 5
+
+google:
+  # Spreadsheet ID from its URL: docs.google.com/spreadsheets/d/<THIS_PART>/edit
+  sheet_id: "1P4IDbCXC9RkCnaMOKFF5gHTtDIoMycMqtAUMG0AKpn4"
+  patients_tab: "Patients"
+  bookings_tab: "Bookings"
+  # Calendar ID. For the physio's primary calendar this is usually her email,
+  # or a dedicated calendar's id from Calendar settings ("Integrate calendar").
+  calendar_id: "jyotisahsah09@gmail.com"
