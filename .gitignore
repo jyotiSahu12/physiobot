@@ -6,3 +6,4 @@ __pycache__/
 *.json
 !config.yaml
 .DS_Store
+*.zip

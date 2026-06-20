@@ -24,9 +24,9 @@ llm:
 
 google:
   # Spreadsheet ID from its URL: docs.google.com/spreadsheets/d/<THIS_PART>/edit
-  sheet_id: "1P4IDbCXC9RkCnaMOKFF5gHTtDIoMycMqtAUMG0AKpn4"
+  sheet_id: "1zFllzNMtN_I8_MzOTYEqpnP2icle42MQ0iJ8e7ZWqWw"
   patients_tab: "Patients"
   bookings_tab: "Bookings"
   # Calendar ID. For the physio's primary calendar this is usually her email,
   # or a dedicated calendar's id from Calendar settings ("Integrate calendar").
-  calendar_id: "jyotisahsah09@gmail.com"
+  calendar_id: "magick42private@gmail.com"
