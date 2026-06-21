@@ -137,7 +137,7 @@ class Parser:
                 intent = "ask_price"
             elif any(l in lower_msg for l in ["where", "address", "branch", "location", "clinic at"]):
                 intent = "ask_location"
-            elif any(t in lower_msg for t in ["time", "timing", "hour", "when", "schedule"]):
+            elif any(t in lower_msg for t in ["timings", "opening hours", "open hours", "what time do you open"]):
                 intent = "ask_timings"
 
             # 2. Basic slot extraction

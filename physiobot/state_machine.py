@@ -42,14 +42,21 @@ class StateMachine:
         self._init_db()
 
     def _init_db(self) -> None:
-        """Create sessions table if not exists, and add status/slots_json columns if not already present."""
+        """Create sessions and messages tables if not exist, and add columns if not present."""
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute(
+            conn.executescript(
                 """
                 CREATE TABLE IF NOT EXISTS sessions (
                     phone       TEXT PRIMARY KEY,
                     state       TEXT NOT NULL DEFAULT 'active',
                     updated_at  REAL NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS messages (
+                    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+                    phone   TEXT NOT NULL,
+                    role    TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    ts      REAL NOT NULL
                 );
                 """
             )
@@ -104,6 +111,31 @@ class StateMachine:
         """
         status, slots = self.get_session(phone)
 
+        # Reset session slots on new flow start to avoid carrying over old bookings
+        if intent in ["greeting", "book_appointment"] and status in ["CONFIRMED", "HUMAN_HANDOFF"]:
+            slots = {}
+            status = "COLLECTING_INTAKE"
+
+        # Fetch the latest user message text to check for rescheduling phrases
+        with sqlite3.connect(self.db_path) as conn:
+            row = conn.execute(
+                "SELECT content FROM messages WHERE phone = ? AND role = 'user' ORDER BY id DESC LIMIT 1", (phone,)
+            ).fetchone()
+            user_msg = row[0] if row else ""
+        lower_msg = user_msg.lower().strip()
+
+        # Handle rescheduling requests by clearing slots and prompting for new date
+        if status in ["AWAITING_SLOT_SELECTION", "CONFIRMED"] and (
+            intent == "reschedule_appointment" 
+            or "another slot" in lower_msg 
+            or "reschedule" in lower_msg 
+            or "other slot" in lower_msg
+        ):
+            slots["preferred_date"] = None
+            slots["preferred_time"] = None
+            self.save_session(phone, "AWAITING_SLOT_SELECTION", slots)
+            return "request_date_time", {}
+
         # Merge parsed slots into session storage (ignore null/empty strings)
         for k, v in parsed_slots.items():
             if v is not None and v != "":
@@ -124,7 +156,6 @@ class StateMachine:
         handoff_intents = bot_cfg.get("handoff_to_human_when", [])
         if (
             intent in handoff_intents
-            or intent == "reschedule_appointment"
             or intent == "cancel_appointment"
         ):
             self.save_session(phone, "HUMAN_HANDOFF", slots)
@@ -151,14 +182,13 @@ class StateMachine:
                 ):
                     matched_faq = faq
                     break
-            if not matched_faq and faqs:
-                matched_faq = faqs[0]
 
             if matched_faq:
                 return "faq_response", {
                     "question": matched_faq["question"],
                     "answer": matched_faq["answer"],
                 }
+            # Fall through if no matching FAQ was found to let the normal conversation flow reply
 
         # 4. State Transitions
         if status == "START":
