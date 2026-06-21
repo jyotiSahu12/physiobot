@@ -2,49 +2,69 @@ from physiobot.orchestrator import Orchestrator
 from physiobot.store import Store
 
 
-class StubAgent:
-    def __init__(self, reply="hi from agent"):
-        self.reply = reply
-        self.seen_history = None
+class StubParser:
+    def __init__(self, intent="greeting", slots=None, red_flags=None):
+        self.intent = intent
+        self.slots = slots or {}
+        self.red_flags = red_flags or []
 
-    def respond(self, history):
-        self.seen_history = history
-        return self.reply
+    def parse_message(self, history):
+        return {
+            "intent": self.intent,
+            "slots": self.slots,
+            "red_flags_detected": self.red_flags,
+        }
+
+
+class StubStateMachine:
+    def __init__(self, template="welcome_greeting", params=None):
+        self.template = template
+        self.params = params or {"clinic_name": "Test Clinic"}
+
+    def process_turn(self, phone, intent, slots, red_flags):
+        return self.template, self.params
 
 
 class RecordingOutbound:
     def __init__(self):
         self.sent = []
+        self.templates_sent = []
 
     def send_text(self, to, text):
         self.sent.append((to, text))
 
+    def send_template(self, to, template_key, **kwargs):
+        self.templates_sent.append((to, template_key, kwargs))
+        from physiobot.templates import format_template_text
+        return format_template_text(template_key, **kwargs)
+
 
 def test_handle_message_persists_and_sends(config, tmp_path):
     store = Store(tmp_path / "o.db")
-    agent = StubAgent("Hello Asha!")
+    parser = StubParser(intent="greeting")
+    sm = StubStateMachine(template="welcome_greeting", params={"clinic_name": "Physio Clinic"})
     out = RecordingOutbound()
-    orch = Orchestrator(config, store=store, agent=agent, outbound=out)
+    orch = Orchestrator(config, store=store, parser=parser, state_machine=sm, outbound=out)
 
     reply = orch.handle_message("9199", "hi")
 
-    assert reply == "Hello Asha!"
-    assert out.sent == [("9199", "Hello Asha!")]
+    assert "Physio Clinic" in reply
+    assert out.templates_sent == [("9199", "welcome_greeting", {"clinic_name": "Physio Clinic"})]
     # both user and assistant turns persisted
     assert store.history("9199") == [
         {"role": "user", "content": "hi"},
-        {"role": "assistant", "content": "Hello Asha!"},
+        {"role": "assistant", "content": reply},
     ]
 
 
-def test_handle_message_agent_failure_falls_back(config, tmp_path):
-    class BoomAgent:
-        def respond(self, history):
-            raise RuntimeError("ollama down")
+def test_handle_message_parser_failure_falls_back(config, tmp_path):
+    class BoomParser:
+        def parse_message(self, history):
+            raise RuntimeError("llm down")
 
     out = RecordingOutbound()
     orch = Orchestrator(config, store=Store(tmp_path / "o.db"),
-                        agent=BoomAgent(), outbound=out)
+                        parser=BoomParser(), outbound=out)
     reply = orch.handle_message("p", "hi")
     assert "went wrong" in reply.lower()
-    assert out.sent[0][0] == "p"
+    assert out.sent == [("p", reply)]

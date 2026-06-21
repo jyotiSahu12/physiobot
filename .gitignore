@@ -4,6 +4,7 @@ __pycache__/
 .env
 *.db
 *.json
+!physiobot/clinic_metadata.json
 !config.yaml
 .DS_Store
 *.zip

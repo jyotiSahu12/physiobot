@@ -1,0 +1,911 @@
+{
+  "schema_version": "1.0.0",
+  "last_updated": "2026-06-20",
+  "clinic_profile": {
+    "clinic_id": "physio_clinic_india_001",
+    "brand_name": "REPLACE_WITH_CLINIC_NAME",
+    "legal_name": "REPLACE_WITH_LEGAL_ENTITY_NAME",
+    "clinic_type": "Physiotherapy and Rehabilitation Clinic",
+    "tagline": "Personalized physiotherapy, pain relief and rehabilitation care",
+    "short_description": "A physiotherapy clinic offering assessment, pain management, injury rehabilitation, post-surgery rehab, sports rehab, home physiotherapy and preventive care.",
+    "country": "India",
+    "primary_city": "REPLACE_WITH_CITY",
+    "founded_year": null,
+    "website": "REPLACE_WITH_WEBSITE_URL",
+    "google_maps_url": "REPLACE_WITH_GOOGLE_MAPS_URL",
+    "logo_url": "REPLACE_WITH_LOGO_URL",
+    "photos": {
+      "clinic_exterior": [],
+      "reception": [],
+      "treatment_rooms": [],
+      "equipment": [],
+      "therapists": []
+    },
+    "registration_and_compliance": {
+      "gst_number": "REPLACE_WITH_GST_NUMBER_IF_APPLICABLE",
+      "clinic_registration_number": "REPLACE_WITH_CLINIC_REGISTRATION_IF_APPLICABLE",
+      "physiotherapist_registration_details": "REPLACE_WITH_STATE_COUNCIL_OR_APPLICABLE_REGISTRATION_DETAILS",
+      "invoice_available": true,
+      "medical_certificate_available": false,
+      "prescription_required_for_physiotherapy": "Not always required, but may be requested for post-surgical, neurological, fracture, cardiac or high-risk cases."
+    }
+  },
+  "locations": [
+    {
+      "location_id": "branch_001",
+      "branch_name": "REPLACE_WITH_BRANCH_NAME",
+      "address": {
+        "line_1": "REPLACE_WITH_ADDRESS_LINE_1",
+        "line_2": "REPLACE_WITH_ADDRESS_LINE_2",
+        "area": "REPLACE_WITH_AREA",
+        "city": "REPLACE_WITH_CITY",
+        "state": "REPLACE_WITH_STATE",
+        "pincode": "REPLACE_WITH_PINCODE",
+        "landmark": "REPLACE_WITH_LANDMARK"
+      },
+      "geo_coordinates": {
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": {
+        "phone": "REPLACE_WITH_PHONE",
+        "whatsapp": "REPLACE_WITH_WHATSAPP",
+        "email": "REPLACE_WITH_EMAIL"
+      },
+      "operating_hours": {
+        "monday": "09:00-20:00",
+        "tuesday": "09:00-20:00",
+        "wednesday": "09:00-20:00",
+        "thursday": "09:00-20:00",
+        "friday": "09:00-20:00",
+        "saturday": "09:00-18:00",
+        "sunday": "Closed or by appointment"
+      },
+      "services_available_at_location": [
+        "clinic_visit",
+        "home_visit",
+        "tele_consultation"
+      ],
+      "accessibility": {
+        "wheelchair_accessible": true,
+        "elevator_available": true,
+        "parking_available": true,
+        "two_wheeler_parking": true,
+        "car_parking": true,
+        "washroom_available": true,
+        "accessible_washroom": false,
+        "nearby_public_transport": "REPLACE_WITH_METRO_BUS_AUTO_DETAILS"
+      },
+      "facilities": {
+        "private_treatment_room": true,
+        "exercise_rehab_area": true,
+        "sports_rehab_area": true,
+        "electrotherapy_available": true,
+        "changing_room": true,
+        "waiting_area": true,
+        "drinking_water": true,
+        "digital_payment": true
+      }
+    }
+  ],
+  "contact_channels": {
+    "primary_phone": "REPLACE_WITH_PHONE",
+    "whatsapp": "REPLACE_WITH_WHATSAPP",
+    "email": "REPLACE_WITH_EMAIL",
+    "website": "REPLACE_WITH_WEBSITE_URL",
+    "instagram": "REPLACE_WITH_INSTAGRAM_URL",
+    "facebook": "REPLACE_WITH_FACEBOOK_URL",
+    "google_business_profile": "REPLACE_WITH_GMB_URL",
+    "emergency_contact_policy": "This clinic is not an emergency medical facility. For emergencies, customers should contact local emergency services or visit the nearest hospital."
+  },
+  "languages_supported": [
+    "English",
+    "Hindi",
+    "REPLACE_WITH_LOCAL_LANGUAGE_1",
+    "REPLACE_WITH_LOCAL_LANGUAGE_2"
+  ],
+  "service_delivery_modes": {
+    "clinic_visit": {
+      "available": true,
+      "best_for": [
+        "first assessment",
+        "manual therapy",
+        "electrotherapy",
+        "supervised rehab",
+        "sports injury rehab",
+        "post-surgical rehab"
+      ]
+    },
+    "home_visit": {
+      "available": true,
+      "best_for": [
+        "elderly patients",
+        "post-surgery mobility limitations",
+        "neurological rehab",
+        "bedridden patients",
+        "patients unable to travel"
+      ],
+      "service_radius_km": null,
+      "extra_travel_charge": "Depends on distance and area"
+    },
+    "tele_consultation": {
+      "available": true,
+      "best_for": [
+        "exercise guidance",
+        "posture correction",
+        "follow-up review",
+        "ergonomics advice",
+        "mild pain cases",
+        "patients outside service area"
+      ],
+      "not_best_for": [
+        "severe pain",
+        "acute injury",
+        "hands-on manual therapy",
+        "neurological deficit",
+        "post-fracture or post-surgery without clearance"
+      ]
+    }
+  },
+  "services": [
+    {
+      "service_id": "initial_assessment",
+      "name": "Initial Physiotherapy Assessment",
+      "category": "Assessment",
+      "description": "Detailed evaluation of pain, mobility, strength, posture, function, medical history and treatment goals.",
+      "recommended_for": [
+        "first-time patients",
+        "unclear pain cause",
+        "new injury",
+        "chronic pain",
+        "post-surgery rehab planning"
+      ],
+      "session_duration_minutes": 45,
+      "price_range_inr": {
+        "clinic": {
+          "min": null,
+          "max": null
+        },
+        "home": {
+          "min": null,
+          "max": null
+        },
+        "online": {
+          "min": null,
+          "max": null
+        }
+      },
+      "includes": [
+        "history taking",
+        "movement assessment",
+        "pain and function scoring",
+        "clinical physiotherapy examination",
+        "treatment plan recommendation",
+        "home exercise guidance"
+      ],
+      "requires_doctor_referral": false,
+      "customer_choice_guidance": "Choose this if the customer is unsure which service is right or is visiting for the first time."
+    },
+    {
+      "service_id": "orthopedic_physiotherapy",
+      "name": "Orthopedic Physiotherapy",
+      "category": "Pain and Musculoskeletal Rehab",
+      "description": "Treatment for muscle, joint, ligament, tendon and spine-related pain or movement problems.",
+      "conditions_treated": [
+        "neck pain",
+        "shoulder pain",
+        "frozen shoulder",
+        "back pain",
+        "sciatica",
+        "knee pain",
+        "ankle sprain",
+        "heel pain",
+        "tennis elbow",
+        "golfer's elbow",
+        "wrist pain",
+        "hip pain",
+        "arthritis-related stiffness",
+        "muscle strain",
+        "ligament injury"
+      ],
+      "techniques_used": [
+        "manual therapy",
+        "mobility exercises",
+        "strengthening",
+        "stretching",
+        "posture correction",
+        "pain education",
+        "electrotherapy if needed",
+        "home exercise program"
+      ],
+      "session_duration_minutes": 30,
+      "customer_choice_guidance": "Choose this for common pain, stiffness, sprain, strain, posture-related discomfort or joint movement restriction."
+    },
+    {
+      "service_id": "sports_injury_rehab",
+      "name": "Sports Injury Rehabilitation",
+      "category": "Sports Rehab",
+      "description": "Rehabilitation for athletes and active individuals recovering from sports injuries or performance-limiting pain.",
+      "conditions_treated": [
+        "ACL injury rehab",
+        "meniscus injury",
+        "ankle sprain",
+        "runner's knee",
+        "shin splints",
+        "hamstring strain",
+        "shoulder instability",
+        "rotator cuff injury",
+        "tennis elbow",
+        "groin strain",
+        "return-to-sport conditioning"
+      ],
+      "includes": [
+        "injury assessment",
+        "strength and mobility testing",
+        "progressive loading plan",
+        "balance and proprioception training",
+        "sport-specific drills",
+        "return-to-play guidance"
+      ],
+      "customer_choice_guidance": "Choose this if the customer plays sports, goes to the gym, runs, cycles, dances or wants to return to activity safely."
+    },
+    {
+      "service_id": "post_surgical_rehab",
+      "name": "Post-Surgical Rehabilitation",
+      "category": "Rehabilitation",
+      "description": "Structured rehab after orthopedic or neurological surgery, based on surgeon clearance and healing stage.",
+      "conditions_treated": [
+        "ACL reconstruction",
+        "knee replacement",
+        "hip replacement",
+        "shoulder surgery",
+        "spine surgery",
+        "fracture fixation",
+        "meniscus surgery",
+        "rotator cuff repair"
+      ],
+      "requires_medical_documents": true,
+      "documents_to_bring": [
+        "doctor prescription",
+        "surgery discharge summary",
+        "imaging reports",
+        "post-operative protocol if available",
+        "current medication list"
+      ],
+      "customer_choice_guidance": "Choose this after surgery when the doctor has advised physiotherapy or movement rehabilitation."
+    },
+    {
+      "service_id": "neuro_rehab",
+      "name": "Neurological Rehabilitation",
+      "category": "Neuro Rehab",
+      "description": "Rehab for patients with movement, balance, coordination or functional limitations due to neurological conditions.",
+      "conditions_treated": [
+        "stroke rehab",
+        "paralysis rehab",
+        "Parkinson's disease",
+        "multiple sclerosis",
+        "spinal cord injury",
+        "balance disorders",
+        "neuropathy-related weakness",
+        "facial palsy rehab"
+      ],
+      "best_mode": [
+        "clinic_visit",
+        "home_visit"
+      ],
+      "requires_medical_documents": true,
+      "customer_choice_guidance": "Choose this for stroke, paralysis, nerve-related weakness, balance issues or neurological movement problems."
+    },
+    {
+      "service_id": "geriatric_physiotherapy",
+      "name": "Geriatric Physiotherapy",
+      "category": "Elderly Care",
+      "description": "Physiotherapy for older adults focused on mobility, balance, strength, fall prevention and independence.",
+      "conditions_treated": [
+        "age-related weakness",
+        "fall risk",
+        "arthritis",
+        "balance issues",
+        "walking difficulty",
+        "post-hospitalization weakness",
+        "joint stiffness"
+      ],
+      "customer_choice_guidance": "Choose this for elderly patients needing safe movement, strength, balance or walking support."
+    },
+    {
+      "service_id": "women_health_physiotherapy",
+      "name": "Women's Health Physiotherapy",
+      "category": "Women's Health",
+      "description": "Physiotherapy support for pregnancy, postpartum recovery, pelvic floor health and pain management.",
+      "conditions_treated": [
+        "pregnancy-related back pain",
+        "postpartum weakness",
+        "pelvic floor weakness",
+        "diastasis recti",
+        "urinary leakage",
+        "pelvic pain"
+      ],
+      "requires_specialist_availability": true,
+      "customer_choice_guidance": "Choose this for pregnancy, postpartum or pelvic-floor-related physiotherapy needs."
+    },
+    {
+      "service_id": "pediatric_physiotherapy",
+      "name": "Pediatric Physiotherapy",
+      "category": "Pediatric Rehab",
+      "description": "Physiotherapy for children with developmental, posture, movement or injury-related needs.",
+      "conditions_treated": [
+        "delayed milestones",
+        "toe walking",
+        "flat feet",
+        "cerebral palsy support",
+        "posture issues",
+        "sports injuries in children"
+      ],
+      "parent_or_guardian_required": true,
+      "customer_choice_guidance": "Choose this for children needing movement, posture, developmental or injury rehabilitation support."
+    },
+    {
+      "service_id": "ergonomics_posture",
+      "name": "Posture and Ergonomics Consultation",
+      "category": "Preventive Physiotherapy",
+      "description": "Workstation, posture and lifestyle assessment for people with desk-job pain or repetitive strain.",
+      "conditions_treated": [
+        "neck stiffness",
+        "upper back pain",
+        "lower back pain",
+        "wrist pain",
+        "desk-job posture issues",
+        "headache related to posture"
+      ],
+      "available_online": true,
+      "customer_choice_guidance": "Choose this for office workers, remote workers, students or people with posture-related pain."
+    },
+    {
+      "service_id": "pain_management",
+      "name": "Pain Management Physiotherapy",
+      "category": "Pain Relief",
+      "description": "Physiotherapy for acute or chronic pain using movement therapy, education, manual therapy and modalities where appropriate.",
+      "conditions_treated": [
+        "chronic back pain",
+        "neck pain",
+        "joint pain",
+        "muscle spasm",
+        "arthritis pain",
+        "nerve irritation",
+        "recurrent pain"
+      ],
+      "customer_choice_guidance": "Choose this when the main goal is reducing pain and improving daily function."
+    }
+  ],
+  "techniques_and_modalities": {
+    "manual_therapy": true,
+    "exercise_therapy": true,
+    "strength_training": true,
+    "mobility_training": true,
+    "balance_training": true,
+    "gait_training": true,
+    "posture_correction": true,
+    "ergonomic_advice": true,
+    "electrotherapy": {
+      "available": true,
+      "types": [
+        "TENS",
+        "IFT",
+        "ultrasound therapy",
+        "muscle stimulation",
+        "hot pack",
+        "cold pack"
+      ]
+    },
+    "dry_needling": {
+      "available": "REPLACE_WITH_TRUE_FALSE",
+      "requires_consent": true
+    },
+    "cupping_therapy": {
+      "available": "REPLACE_WITH_TRUE_FALSE",
+      "requires_consent": true
+    },
+    "taping": {
+      "available": true,
+      "types": [
+        "kinesiology taping",
+        "sports taping"
+      ]
+    }
+  },
+  "therapists": [
+    {
+      "therapist_id": "therapist_001",
+      "name": "REPLACE_WITH_THERAPIST_NAME",
+      "gender": "REPLACE_WITH_GENDER_IF_DISCLOSED",
+      "qualification": [
+        "BPT",
+        "MPT"
+      ],
+      "specialization": [
+        "Orthopedic Physiotherapy",
+        "Sports Rehab",
+        "Post-Surgical Rehab"
+      ],
+      "years_of_experience": null,
+      "languages": [
+        "English",
+        "Hindi"
+      ],
+      "registration_number": "REPLACE_WITH_REGISTRATION_IF_APPLICABLE",
+      "available_for": [
+        "clinic_visit",
+        "home_visit",
+        "tele_consultation"
+      ],
+      "working_days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "profile_summary": "REPLACE_WITH_THERAPIST_PROFILE"
+    }
+  ],
+  "pricing": {
+    "currency": "INR",
+    "taxes": {
+      "gst_applicable": "REPLACE_WITH_TRUE_FALSE",
+      "gst_included_in_price": "REPLACE_WITH_TRUE_FALSE"
+    },
+    "consultation_fees": {
+      "initial_assessment_clinic": null,
+      "follow_up_clinic": null,
+      "home_visit": null,
+      "tele_consultation": null
+    },
+    "packages": [
+      {
+        "package_id": "package_5_sessions",
+        "name": "5 Session Rehab Package",
+        "number_of_sessions": 5,
+        "validity_days": 30,
+        "price_inr": null,
+        "best_for": [
+          "mild pain",
+          "follow-up care",
+          "short-term rehab"
+        ]
+      },
+      {
+        "package_id": "package_10_sessions",
+        "name": "10 Session Rehab Package",
+        "number_of_sessions": 10,
+        "validity_days": 45,
+        "price_inr": null,
+        "best_for": [
+          "post-surgery rehab",
+          "sports rehab",
+          "chronic pain",
+          "strength rebuilding"
+        ]
+      }
+    ],
+    "payment_methods": [
+      "UPI",
+      "cash",
+      "credit card",
+      "debit card",
+      "net banking",
+      "wallet",
+      "bank transfer"
+    ],
+    "invoice_policy": "Invoice can be provided after payment.",
+    "refund_policy_summary": "Refunds depend on cancellation timing, unused package sessions and clinic policy."
+  },
+  "booking": {
+    "appointment_required": true,
+    "walk_in_allowed": "Subject to slot availability",
+    "booking_channels": [
+      "phone",
+      "whatsapp",
+      "website",
+      "bot",
+      "clinic reception"
+    ],
+    "minimum_advance_booking_time_minutes": 60,
+    "slot_duration_minutes": 30,
+    "first_visit_recommended_duration_minutes": 45,
+    "booking_required_fields": [
+      "full_name",
+      "phone_number",
+      "age",
+      "gender_optional",
+      "location_or_area",
+      "preferred_service_mode",
+      "main_problem",
+      "pain_area",
+      "pain_duration",
+      "preferred_date",
+      "preferred_time",
+      "doctor_referral_status"
+    ],
+    "optional_booking_fields": [
+      "medical_reports",
+      "surgery_details",
+      "current_medications",
+      "previous_physiotherapy_history",
+      "preferred_therapist_gender",
+      "language_preference"
+    ],
+    "rescheduling_policy": {
+      "allowed": true,
+      "minimum_notice_hours": 4,
+      "notes": "Late rescheduling may be treated as cancellation depending on clinic policy."
+    },
+    "cancellation_policy": {
+      "allowed": true,
+      "minimum_notice_hours": 4,
+      "late_cancellation_fee": "REPLACE_WITH_POLICY"
+    },
+    "no_show_policy": "No-show appointments may be charged or deducted from package sessions."
+  },
+  "customer_intake": {
+    "basic_details": {
+      "full_name": null,
+      "phone_number": null,
+      "age": null,
+      "gender": null,
+      "city": null,
+      "area": null,
+      "preferred_language": null
+    },
+    "clinical_intake_questions": [
+      {
+        "field": "main_problem",
+        "question": "What problem are you facing?",
+        "type": "free_text",
+        "required": true
+      },
+      {
+        "field": "pain_area",
+        "question": "Where is the pain or discomfort?",
+        "type": "single_or_multi_select",
+        "options": [
+          "neck",
+          "shoulder",
+          "upper back",
+          "lower back",
+          "hip",
+          "knee",
+          "ankle",
+          "foot",
+          "elbow",
+          "wrist",
+          "hand",
+          "headache",
+          "general weakness",
+          "balance issue",
+          "post-surgery rehab",
+          "sports injury",
+          "other"
+        ],
+        "required": true
+      },
+      {
+        "field": "pain_duration",
+        "question": "How long have you had this issue?",
+        "type": "single_select",
+        "options": [
+          "less than 24 hours",
+          "1-3 days",
+          "4-7 days",
+          "1-4 weeks",
+          "1-3 months",
+          "more than 3 months"
+        ],
+        "required": true
+      },
+      {
+        "field": "pain_score",
+        "question": "On a scale of 0 to 10, how severe is the pain?",
+        "type": "number",
+        "min": 0,
+        "max": 10,
+        "required": true
+      },
+      {
+        "field": "injury_or_surgery",
+        "question": "Was this due to an injury, accident or surgery?",
+        "type": "yes_no_details",
+        "required": true
+      },
+      {
+        "field": "doctor_consulted",
+        "question": "Have you consulted a doctor for this?",
+        "type": "yes_no",
+        "required": false
+      },
+      {
+        "field": "reports_available",
+        "question": "Do you have any X-ray, MRI, blood report, discharge summary or prescription?",
+        "type": "yes_no_upload",
+        "required": false
+      },
+      {
+        "field": "functional_limitation",
+        "question": "What activity is difficult right now?",
+        "type": "multi_select",
+        "options": [
+          "walking",
+          "sitting",
+          "standing",
+          "bending",
+          "lifting",
+          "stairs",
+          "sleeping",
+          "running",
+          "sports",
+          "office work",
+          "household work",
+          "self-care",
+          "none"
+        ],
+        "required": false
+      }
+    ]
+  },
+  "triage_and_safety": {
+    "bot_role": "The bot can collect information, explain clinic services, help with booking and suggest the most relevant physiotherapy service category. The bot must not diagnose medical conditions.",
+    "red_flags_requiring_urgent_medical_referral": [
+      "chest pain",
+      "severe shortness of breath",
+      "sudden weakness on one side of body",
+      "facial drooping",
+      "slurred speech",
+      "loss of consciousness",
+      "seizure",
+      "new loss of bladder or bowel control",
+      "numbness in private area or saddle region",
+      "severe trauma or accident",
+      "suspected fracture",
+      "severe swelling with deformity",
+      "high fever with severe back or neck pain",
+      "unexplained weight loss with persistent pain",
+      "severe night pain not relieved by rest",
+      "post-surgery wound redness, pus, bleeding or fever"
+    ],
+    "red_flag_bot_response": "Your symptoms may need urgent medical attention. Please visit the nearest hospital, emergency department or contact local emergency services immediately. Physiotherapy booking can be considered after medical clearance.",
+    "requires_doctor_clearance_before_booking": [
+      "recent fracture",
+      "recent surgery",
+      "stroke or neurological event",
+      "heart condition",
+      "uncontrolled diabetes or blood pressure",
+      "pregnancy-related complications",
+      "severe osteoporosis",
+      "cancer-related pain",
+      "unexplained severe pain",
+      "infection or fever"
+    ],
+    "pain_severity_guidance": {
+      "0_3": "Mild pain. Customer may book assessment or consultation.",
+      "4_6": "Moderate pain. Recommend assessment before treatment plan.",
+      "7_10": "Severe pain. Screen for red flags and recommend doctor consultation if sudden, traumatic or worsening."
+    }
+  },
+  "decision_support": {
+    "choose_clinic_visit_when": [
+      "first visit",
+      "hands-on assessment is needed",
+      "manual therapy may be needed",
+      "equipment-based rehab is needed",
+      "sports or post-surgery rehab requires supervision"
+    ],
+    "choose_home_visit_when": [
+      "patient cannot travel",
+      "elderly patient has mobility issues",
+      "post-surgery movement is limited",
+      "neurological rehab is needed at home",
+      "bedridden or high-dependency patient"
+    ],
+    "choose_online_consultation_when": [
+      "customer needs exercise guidance",
+      "customer needs posture or ergonomic advice",
+      "customer needs follow-up review",
+      "customer is outside clinic area",
+      "pain is mild and no red flags are present"
+    ],
+    "first_time_customer_recommendation": "Recommend Initial Physiotherapy Assessment unless the customer clearly knows the required service."
+  },
+  "patient_journey": {
+    "step_1": "Customer shares symptoms, pain area, duration and preferred mode.",
+    "step_2": "Bot checks for red flags and doctor-clearance requirements.",
+    "step_3": "Bot recommends suitable service category and appointment type.",
+    "step_4": "Customer selects date, time, location and therapist preference if available.",
+    "step_5": "Clinic confirms appointment and payment requirement.",
+    "step_6": "Physiotherapist performs assessment and creates treatment plan.",
+    "step_7": "Customer receives exercises, follow-up plan and package recommendation if needed."
+  },
+  "documents_to_bring": [
+    "doctor prescription if available",
+    "X-ray, MRI, CT scan or ultrasound report if available",
+    "surgery discharge summary if applicable",
+    "current medication list",
+    "previous physiotherapy notes if available",
+    "comfortable clothing for movement assessment"
+  ],
+  "policies": {
+    "privacy_policy": "Customer data is used for appointment booking, clinical coordination, treatment records and communication. Data should not be shared externally without consent unless required by law or medical emergency.",
+    "consent_policy": "Customer consent is required before physical assessment, manual therapy, dry needling, cupping, taping, photographs or sharing medical records.",
+    "minor_policy": "Patients below 18 years should be accompanied by a parent or guardian.",
+    "late_arrival_policy": "Late arrival may reduce treatment time or require rescheduling.",
+    "package_validity_policy": "Package sessions must be used within the stated validity period.",
+    "female_patient_policy": "Female patients may request a female therapist if available.",
+    "home_visit_policy": "Home visits depend on therapist availability, service area, travel time and safety conditions.",
+    "infection_control_policy": "Treatment areas and equipment are cleaned regularly. Customers with fever or contagious illness should inform the clinic before visiting."
+  },
+  "bot_configuration": {
+    "primary_bot_goals": [
+      "answer clinic-related questions",
+      "help customers choose the right service",
+      "collect structured intake information",
+      "screen for urgent red flags",
+      "book appointments",
+      "explain pricing and packages",
+      "share preparation instructions",
+      "route complex cases to clinic staff"
+    ],
+    "bot_must_not_do": [
+      "must not provide a medical diagnosis",
+      "must not guarantee cure or recovery timeline",
+      "must not advise stopping prescribed medicines",
+      "must not handle emergencies as physiotherapy cases",
+      "must not claim insurance approval unless confirmed",
+      "must not confirm appointment unless slot availability is verified"
+    ],
+    "supported_intents": [
+      "book_appointment",
+      "reschedule_appointment",
+      "cancel_appointment",
+      "ask_price",
+      "ask_services",
+      "ask_location",
+      "ask_timings",
+      "ask_home_visit",
+      "ask_online_consultation",
+      "ask_therapist_details",
+      "share_symptoms",
+      "post_surgery_rehab_query",
+      "sports_injury_query",
+      "back_pain_query",
+      "neck_pain_query",
+      "knee_pain_query",
+      "elderly_care_query",
+      "women_health_query",
+      "insurance_query",
+      "payment_query",
+      "emergency_or_red_flag"
+    ],
+    "slot_filling_order_for_booking": [
+      "full_name",
+      "phone_number",
+      "main_problem",
+      "pain_area",
+      "pain_duration",
+      "pain_score",
+      "preferred_service_mode",
+      "preferred_branch_or_area",
+      "preferred_date",
+      "preferred_time",
+      "doctor_referral_status",
+      "reports_available"
+    ],
+    "handoff_to_human_when": [
+      "customer reports red flag symptoms",
+      "customer is post-surgery and protocol is unclear",
+      "customer asks for diagnosis",
+      "customer asks for guaranteed recovery",
+      "customer has complex neurological condition",
+      "customer has payment dispute",
+      "customer asks for therapist not listed",
+      "customer wants custom package pricing",
+      "bot confidence is low"
+    ],
+    "response_style": {
+      "tone": "clear, calm, professional and reassuring",
+      "language": "simple Indian English by default",
+      "avoid": [
+        "medical jargon without explanation",
+        "fear-based language",
+        "overpromising",
+        "diagnosis",
+        "unverified claims"
+      ]
+    }
+  },
+  "faqs": [
+    {
+      "question": "Do I need a doctor's prescription for physiotherapy?",
+      "answer": "For common pain or posture issues, a prescription may not always be required. For post-surgery, fracture, neurological, cardiac, pregnancy-related or high-risk cases, medical clearance or documents may be needed."
+    },
+    {
+      "question": "How many sessions will I need?",
+      "answer": "The number of sessions depends on the condition, severity, duration, age, activity level and treatment goals. The physiotherapist can suggest a plan after assessment."
+    },
+    {
+      "question": "Is home physiotherapy available?",
+      "answer": "Yes, if the clinic offers home visits in the customer's area and a therapist is available."
+    },
+    {
+      "question": "Can I book physiotherapy for back pain?",
+      "answer": "Yes. The bot should collect pain duration, severity, leg symptoms, injury history and red flags before booking."
+    },
+    {
+      "question": "What should I wear?",
+      "answer": "Wear comfortable clothes that allow movement and allow the therapist to assess the affected area appropriately."
+    },
+    {
+      "question": "Is online physiotherapy effective?",
+      "answer": "Online consultation can help with exercise guidance, posture correction and follow-ups, but it is not ideal when hands-on assessment or urgent medical care is needed."
+    },
+    {
+      "question": "Do you provide invoices?",
+      "answer": "Yes, invoices can be provided if enabled by the clinic."
+    }
+  ],
+  "analytics_events_for_bot": [
+    "new_lead_created",
+    "red_flag_detected",
+    "service_recommended",
+    "appointment_requested",
+    "appointment_confirmed",
+    "appointment_cancelled",
+    "appointment_rescheduled",
+    "human_handoff_triggered",
+    "pricing_shared",
+    "package_interest_shown",
+    "home_visit_requested",
+    "online_consultation_requested"
+  ],
+  "data_fields_to_store": {
+    "customer": [
+      "name",
+      "phone",
+      "age",
+      "gender",
+      "city",
+      "area",
+      "language_preference"
+    ],
+    "clinical": [
+      "main_problem",
+      "pain_area",
+      "pain_duration",
+      "pain_score",
+      "injury_history",
+      "surgery_history",
+      "doctor_referral",
+      "reports_available",
+      "red_flags"
+    ],
+    "booking": [
+      "service_id",
+      "mode",
+      "branch",
+      "preferred_date",
+      "preferred_time",
+      "assigned_therapist",
+      "appointment_status",
+      "payment_status"
+    ],
+    "consent": [
+      "privacy_consent",
+      "treatment_consent",
+      "marketing_consent",
+      "photo_video_consent"
+    ]
+  },
+  "disclaimers": {
+    "medical_disclaimer": "Information shared by the bot is for clinic service guidance and appointment support only. It is not a medical diagnosis or emergency advice.",
+    "emergency_disclaimer": "For severe or emergency symptoms, customers should seek urgent medical care from a hospital or emergency service.",
+    "outcome_disclaimer": "Recovery time and results vary by individual condition, severity, consistency and medical factors."
+  }
+}
