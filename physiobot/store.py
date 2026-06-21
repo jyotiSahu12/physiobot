@@ -52,12 +52,33 @@ class Store:
                     ts      REAL NOT NULL
                 );
                 CREATE INDEX IF NOT EXISTS idx_messages_phone ON messages(phone, id);
+                CREATE TABLE IF NOT EXISTS processed_messages (
+                    message_id   TEXT PRIMARY KEY,
+                    processed_at REAL NOT NULL
+                );
                 """
             )
             conn.commit()
         finally:
             if own_conn:
                 conn.close()
+
+    def mark_processed(self, message_id: str) -> bool:
+        """Atomically claim a Meta message id for processing. Returns True the
+        first time it's seen, False on any later (duplicate) delivery — Meta
+        retries a webhook until it gets a 200, so the same inbound message can
+        arrive several times and must not be answered/booked twice.
+
+        Always returns True for a falsy id (e.g. /simulate has no message id),
+        so non-webhook callers are never deduped."""
+        if not message_id:
+            return True
+        with self._connect() as conn:
+            cur = conn.execute(
+                "INSERT OR IGNORE INTO processed_messages (message_id, processed_at) VALUES (?, ?)",
+                (message_id, time.time()),
+            )
+            return cur.rowcount > 0
 
     def touch_session(self, phone: str) -> None:
         with self._connect() as conn:

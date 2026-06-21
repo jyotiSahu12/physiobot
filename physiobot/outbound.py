@@ -17,12 +17,17 @@ from .templates import (
 
 log = logging.getLogger("physiobot.outbound")
 
-GRAPH_URL = "https://graph.facebook.com/v21.0"
-
 
 class Outbound:
     def __init__(self, config: Config | None = None):
         self.config = config or get_config()
+
+    def _messages_url(self) -> str:
+        """Graph API send-messages endpoint, with the API version pulled from
+        config (env: META_GRAPH_API_VERSION) so a Meta deprecation is a config
+        bump, not a code change."""
+        meta = self.config.meta
+        return f"https://graph.facebook.com/{meta.api_version}/{meta.phone_number_id}/messages"
 
     def send_text(self, to: str, text: str) -> None:
         """Send a standard free-text WhatsApp message."""
@@ -30,7 +35,7 @@ class Outbound:
         if not meta.configured:
             log.info("[DEV] would send text to %s: %s", to, text)
             return
-        url = f"{GRAPH_URL}/{meta.phone_number_id}/messages"
+        url = self._messages_url()
         payload = {
             "messaging_product": "whatsapp",
             "to": to,
@@ -60,7 +65,7 @@ class Outbound:
         template_cfg = TEMPLATES.get(template_key, TEMPLATES["generic_fallback"])
         is_interactive = "interactive_type" in template_cfg
 
-        url = f"{GRAPH_URL}/{meta.phone_number_id}/messages"
+        url = self._messages_url()
         headers = {"Authorization": f"Bearer {meta.token}"}
 
         if is_interactive:

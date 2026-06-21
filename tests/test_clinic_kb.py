@@ -5,8 +5,20 @@ def make_kb(**overrides) -> ClinicKB:
     data = {
         "clinic_profile": {"brand_name": "Balance Plus"},
         "primary_branch": {
+            "branch_id": "balanceplus_hsr_layout_sector_7",
             "branch_name": "Balance Plus - HSR Layout",
             "contact": {"phone": {"value": "+917411692516", "display_value": "+91 74116 92516"}},
+            "official_address": {"full_address_customer_facing": "Sector 7, HSR Layout, Bengaluru, Karnataka 560102"},
+        },
+        "other_branches_reference": {
+            "branches": [
+                {
+                    "branch_id": "balanceplus_koramangala_ejipura",
+                    "branch_name": "Koramangala / Ejipura",
+                    "official_address": "7/22, NMR enclave, Ejipura main Road, Koramangala, Bengaluru",
+                    "phone": "+91 7411692516",
+                },
+            ],
         },
         "triage_and_safety_guardrails": {
             "red_flag_symptoms": ["chest pain", "loss of consciousness"],
@@ -62,6 +74,47 @@ def test_clinic_phone_prefers_display_value():
     assert make_kb().clinic_phone == "+91 74116 92516"
 
 
+def test_primary_branch_id():
+    assert make_kb().primary_branch_id == "balanceplus_hsr_layout_sector_7"
+
+
+def test_branches_lists_primary_first_then_others():
+    branches = make_kb().branches()
+    assert [b.branch_id for b in branches] == [
+        "balanceplus_hsr_layout_sector_7", "balanceplus_koramangala_ejipura",
+    ]
+    assert branches[0].is_primary is True
+    assert branches[1].is_primary is False
+    assert branches[1].name == "Koramangala / Ejipura"
+    assert branches[1].phone == "+91 7411692516"
+
+
+def test_branch_short_name_strips_brand_prefix():
+    branches = make_kb().branches()
+    # "Balance Plus - HSR Layout" -> "HSR Layout" (fits Meta's 24-char cap)
+    assert branches[0].short_name == "HSR Layout"
+    # A branch name without the prefix is returned unchanged.
+    assert branches[1].short_name == "Koramangala / Ejipura"
+
+
+def test_branches_empty_when_no_branch_data():
+    kb = make_kb(primary_branch={}, other_branches_reference={})
+    assert kb.branches() == []
+
+
+def test_branch_by_id_resolves_primary_and_other():
+    kb = make_kb()
+    assert kb.branch_by_id("balanceplus_hsr_layout_sector_7").name == "Balance Plus - HSR Layout"
+    assert kb.branch_by_id("balanceplus_koramangala_ejipura").name == "Koramangala / Ejipura"
+
+
+def test_branch_by_id_returns_none_for_unknown_or_empty():
+    kb = make_kb()
+    assert kb.branch_by_id("not-a-real-branch") is None
+    assert kb.branch_by_id(None) is None
+    assert kb.branch_by_id("") is None
+
+
 def test_maps_url_built_from_customer_facing_address():
     kb = make_kb(primary_branch={
         "branch_name": "Balance Plus - HSR Layout",
@@ -74,7 +127,8 @@ def test_maps_url_built_from_customer_facing_address():
 
 
 def test_maps_url_empty_when_no_address():
-    assert make_kb().maps_url == ""
+    kb = make_kb(primary_branch={"branch_name": "Balance Plus - HSR Layout"})
+    assert kb.maps_url == ""
 
 
 def test_red_flag_accessors():

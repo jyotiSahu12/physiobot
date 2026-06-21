@@ -1,6 +1,6 @@
 import datetime as dt
 
-from physiobot.parser import Parser, parse_natural_date, parse_natural_time
+from physiobot.parser import Parser, parse_natural_date, parse_natural_time, parse_time_of_day
 
 
 class StubProvider:
@@ -9,6 +9,22 @@ class StubProvider:
 
     def chat(self, messages):
         return {"role": "assistant", "content": self.content}
+
+
+def test_parser_fallback_classifies_contact_intent(config):
+    provider = StubProvider("Not JSON at all")
+    parser = Parser(config, provider=provider)
+    result = parser.parse_message([{"role": "user", "content": "what is your contact number?"}])
+    assert result["intent"] == "ask_contact"
+
+
+def test_parser_fallback_classifies_combined_location_and_contact_as_location(config):
+    # Only one intent label can come back for a compound question; location
+    # wins so state_machine can fold the phone number into that answer too.
+    provider = StubProvider("Not JSON at all")
+    parser = Parser(config, provider=provider)
+    result = parser.parse_message([{"role": "user", "content": "what's the location and contact?"}])
+    assert result["intent"] == "ask_location"
 
 
 def test_parser_normal_json(config):
@@ -74,11 +90,43 @@ def test_parser_fallback_resolves_date_change_when_awaiting_date(config):
     provider = StubProvider("Not JSON at all")
     parser = Parser(config, provider=provider)
     history = [
-        {"role": "assistant", "content": "What date would you like to come in?"},
+        {"role": "assistant", "content": "When would you like to come in?"},
         {"role": "user", "content": "Can I have appointment for 23rd June?"},
     ]
     result = parser.parse_message(history)
     assert result["slots"]["preferred_date"] == "2026-06-23"
+
+
+def _today_iso(config):
+    from zoneinfo import ZoneInfo
+    return dt.datetime.now(ZoneInfo(config.clinic.timezone)).date().isoformat()
+
+
+def test_parser_fallback_resolves_natural_when_with_time_of_day(config):
+    # "today evening" / "tomorrow morning" — resolve both a date and a rough
+    # time-of-day window so the bot can show the matching slots.
+    provider = StubProvider("Not JSON at all")
+    parser = Parser(config, provider=provider)
+    history = [
+        {"role": "assistant", "content": "When would you like to come in?"},
+        {"role": "user", "content": "today evening or tomorrow morning works"},
+    ]
+    result = parser.parse_message(history)
+    # earliest-mentioned day + time-of-day win: today + evening
+    assert result["slots"]["preferred_date"] == _today_iso(config)
+    assert result["slots"]["preferred_time_of_day"] == "evening"
+
+
+def test_parser_fallback_bare_time_of_day_defaults_to_today(config):
+    provider = StubProvider("Not JSON at all")
+    parser = Parser(config, provider=provider)
+    history = [
+        {"role": "assistant", "content": "When would you like to come in?"},
+        {"role": "user", "content": "evening please"},
+    ]
+    result = parser.parse_message(history)
+    assert result["slots"]["preferred_date"] == _today_iso(config)
+    assert result["slots"]["preferred_time_of_day"] == "evening"
 
 
 def test_parser_fallback_resolves_time_when_awaiting_slot_pick(config):
@@ -156,3 +204,13 @@ def test_parse_natural_time_handles_common_formats():
     assert parse_natural_time("9am") == "09:00"
     assert parse_natural_time("12am") == "00:00"
     assert parse_natural_time("no time mentioned here") is None
+
+
+def test_parse_time_of_day_buckets_and_earliest_wins():
+    assert parse_time_of_day("tomorrow morning") == "morning"
+    assert parse_time_of_day("this afternoon") == "afternoon"
+    assert parse_time_of_day("come by in the evening") == "evening"
+    assert parse_time_of_day("tonight if possible") == "evening"
+    # earliest-mentioned wins for an "or" answer
+    assert parse_time_of_day("today evening or tomorrow morning") == "evening"
+    assert parse_time_of_day("next Friday") is None

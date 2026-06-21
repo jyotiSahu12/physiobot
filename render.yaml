@@ -10,7 +10,7 @@ services:
     startCommand: "uvicorn physiobot.app:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: PYTHON_VERSION
-        value: "3.12.7"
+        value: "3.12.3"   # keep in lockstep with .python-version (local dev)
       - key: LLM_PROVIDER
         value: groq                # cloud uses Groq, not local Ollama
       - key: WHATSAPP_VERIFY_TOKEN

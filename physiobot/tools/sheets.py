@@ -17,7 +17,7 @@ from ..google_auth import load_credentials
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 PATIENT_HEADERS = ["Timestamp", "Name", "Phone", "Complaint", "Notes"]
-BOOKING_HEADERS = ["Timestamp", "Name", "Phone", "Complaint", "Slot", "EventId"]
+BOOKING_HEADERS = ["Timestamp", "Name", "Phone", "Complaint", "Slot", "EventId", "BranchId"]
 
 
 @lru_cache(maxsize=1)
@@ -62,10 +62,10 @@ class SheetsClient:
         return f"Saved patient details for {name}."
 
     def append_booking(
-        self, name: str, phone: str, complaint: str, slot: str, event_id: str
+        self, name: str, phone: str, complaint: str, slot: str, event_id: str, branch_id: str = ""
     ) -> None:
         ws = self._worksheet(self.config.google.bookings_tab, BOOKING_HEADERS)
-        ws.append_row([_now(), name, phone, complaint, slot, event_id])
+        ws.append_row([_now(), name, phone, complaint, slot, event_id, branch_id])
 
     def booking_exists(self, phone: str, slot: str) -> bool:
         """True if this phone already has this slot booked (avoid duplicate
@@ -75,6 +75,18 @@ class SheetsClient:
             if len(r) >= 5 and r[2].strip() == str(phone).strip() and r[4].strip() == str(slot).strip():
                 return True
         return False
+
+    def last_branch_for_phone(self, phone: str) -> str | None:
+        """The branch_id of this patient's most recent booking, so a returning
+        patient can be offered "book the same branch again?" instead of being
+        asked to choose from scratch every time. Returns None for a new
+        patient, or for rows written before the BranchId column existed."""
+        ws = self._worksheet(self.config.google.bookings_tab, BOOKING_HEADERS)
+        last_branch_id = None
+        for r in ws.get_all_values()[1:]:  # skip header; sheet is append-only, so last match wins
+            if len(r) >= 7 and r[2].strip() == str(phone).strip() and r[6].strip():
+                last_branch_id = r[6].strip()
+        return last_branch_id
 
 
 def _now() -> str:

@@ -2,11 +2,13 @@
 """
 from __future__ import annotations
 
+import datetime as dt
 import json
 import logging
 import sqlite3
 import time
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from .clinic_kb import ClinicKB
 from .config import Config, get_config
@@ -22,10 +24,28 @@ FAQ_RESPONSE_TEMPLATE_KEYS = {
     "ask_price": "unknown_price",
     "ask_services": "service_summary",
     "ask_location": "hsr_address",
+    "ask_contact": "phone_email",
     "ask_timings": "unknown_hours",
     "ask_home_visit": "home_visit",
     "ask_online_consultation": "virtual_consultation",
     "ask_therapist_details": "specific_therapist_request",
+}
+
+# Words that suggest the patient actually wants a brand new booking, used as a
+# safety net alongside the "book_appointment" intent before wiping a
+# confirmed/handed-off session — see the reset block in process_turn. An NLU
+# intent label alone isn't trustworthy enough for a destructive action: a
+# compound question like "what's the location and contact?" has been
+# misclassified as "book_appointment" before, which used to silently erase the
+# patient's confirmed appointment and reopen name confirmation out of nowhere.
+NEW_BOOKING_KEYWORDS = ["book", "appointment", "schedule", "another visit", "new visit", "rebook"]
+
+# Hour ranges [start, end) for narrowing the slot list when a patient asks for a
+# rough time of day ("tomorrow morning") instead of an exact time.
+TIME_OF_DAY_RANGES = {
+    "morning": (0, 12),
+    "afternoon": (12, 17),
+    "evening": (17, 24),
 }
 
 # Intents that require a human to take over entirely (the bot has no
@@ -158,10 +178,88 @@ class StateMachine:
                 return "pain_score"
             if not slots.get("preferred_service_mode"):
                 return "preferred_service_mode"
+            if not slots.get("preferred_branch"):
+                if slots.get("last_branch_id_detected") and not slots.get("returning_branch_confirmed"):
+                    return "returning_branch_confirmed"
+                return "preferred_branch"
         elif status == "AWAITING_SLOT_SELECTION":
             if slots.get("preferred_date") and not slots.get("preferred_time"):
                 return "preferred_time"
         return None
+
+    @staticmethod
+    def _filter_slots_by_time_of_day(free_slots: list[str], time_of_day: str | None) -> list[str]:
+        """Strictly narrow HH:MM slots to a time-of-day window. Returns the input
+        unchanged if no/unknown window, but an EMPTY list if nothing falls in the
+        window — the caller (forward search) needs to know a window is unavailable
+        so it can roll forward rather than silently show unrelated times."""
+        rng = TIME_OF_DAY_RANGES.get(time_of_day or "")
+        if not rng:
+            return free_slots
+        lo, hi = rng
+        narrowed = []
+        for s in free_slots:
+            try:
+                hour = int(s.split(":")[0])
+            except (ValueError, IndexError, AttributeError):
+                continue
+            if lo <= hour < hi:
+                narrowed.append(s)
+        return narrowed
+
+    def _find_next_availability(self, start_date_iso: str, time_of_day: str | None, max_days: int = 14):
+        """Search forward from start_date for real availability, acting like a
+        receptionist scanning the diary. Returns (date_iso, slots, honored_window):
+        - First pass prefers the requested time-of-day window, rolling day by day.
+        - Second pass (or when no window was requested) returns the first day with
+          any free slots.
+        honored_window is True when the returned slots actually match what was
+        asked (so the caller knows whether to apologise for rolling forward).
+        Returns (None, [], False) if nothing is open within max_days."""
+        try:
+            start = dt.date.fromisoformat(start_date_iso)
+        except (ValueError, TypeError):
+            return None, [], False
+
+        cache: dict[int, tuple[str, list[str]]] = {}
+
+        def day_slots(offset: int) -> tuple[str, list[str]]:
+            if offset not in cache:
+                d = (start + dt.timedelta(days=offset)).isoformat()
+                cache[offset] = (d, self.calendar.get_free_slots(d))
+            return cache[offset]
+
+        if time_of_day:
+            for offset in range(max_days):
+                d, free = day_slots(offset)
+                windowed = self._filter_slots_by_time_of_day(free, time_of_day)
+                if windowed:
+                    return d, windowed, True
+
+        for offset in range(max_days):
+            d, free = day_slots(offset)
+            if free:
+                return d, free, (time_of_day is None)
+
+        return None, [], False
+
+    def _describe_window(self, date_iso: str, time_of_day: str | None) -> str:
+        """Human label for a requested slot window, e.g. "Today evening",
+        "Tomorrow morning", "Monday" — used when telling the patient that what
+        they asked for is fully booked."""
+        today = dt.datetime.now(ZoneInfo(self.config.clinic.timezone)).date()
+        try:
+            d = dt.date.fromisoformat(date_iso)
+        except (ValueError, TypeError):
+            return "That time"
+        if d == today:
+            day = "today"
+        elif d == today + dt.timedelta(days=1):
+            day = "tomorrow"
+        else:
+            day = d.strftime("%A")
+        phrase = f"{day} {time_of_day}" if time_of_day else day
+        return phrase[0].upper() + phrase[1:]
 
     @staticmethod
     def _coerce_interactive_value(slot: str, value: str):
@@ -190,6 +288,7 @@ class StateMachine:
         status, slots = self.get_session(phone)
         clinic_name = self.kb.clinic_name or self.config.clinic.name
         clinic_phone = self.kb.clinic_phone or self.config.clinic.contact_number
+        clinic_address = self.kb.clinic_address
 
         # Check for session inactivity timeout (e.g. 4 hours = 14400 seconds)
         with self._connect() as conn:
@@ -219,12 +318,19 @@ class StateMachine:
             return "welcome_greeting", {"clinic_name": clinic_name}
 
         # Reset session slots to start a fresh booking after a confirmed/handed-off
-        # one. Gated to an explicit "book_appointment" intent only — a bare
-        # "hi" or "thank you" after booking is just continuing the chat, not a
-        # request to wipe the existing appointment and restart intake from
-        # scratch (that misfire is exactly why "thank you" used to reopen the
-        # name-confirmation prompt out of nowhere).
-        if intent == "book_appointment" and status in ["CONFIRMED", "HUMAN_HANDOFF"]:
+        # one. Gated to an explicit "book_appointment" intent AND an actual
+        # booking-shaped word in the message itself — a bare "hi"/"thank you"
+        # is just continuing the chat, not a request to wipe the existing
+        # appointment. The keyword check is a deliberate belt-and-braces on
+        # top of the NLU intent: a compound info question like "what's the
+        # location and contact?" has been seen misclassified as
+        # "book_appointment" by the LLM, which used to silently erase the
+        # confirmed appointment and reopen name confirmation out of nowhere.
+        if (
+            intent == "book_appointment"
+            and status in ["CONFIRMED", "HUMAN_HANDOFF"]
+            and any(kw in lower_msg for kw in NEW_BOOKING_KEYWORDS)
+        ):
             slots = {}
             status = "COLLECTING_INTAKE"
             with self._connect() as conn:
@@ -258,7 +364,7 @@ class StateMachine:
         for k, v in parsed_slots.items():
             if k == "phone_number":
                 continue
-            if k in ("preferred_date", "preferred_time") and status != "AWAITING_SLOT_SELECTION":
+            if k in ("preferred_date", "preferred_time", "preferred_time_of_day") and status != "AWAITING_SLOT_SELECTION":
                 continue
             if v is not None and v != "":
                 slots[k] = v
@@ -279,9 +385,27 @@ class StateMachine:
             slots["profile_name_detected"] = profile_name
 
         # 1. Urgent Triage & Red Flags
+        # red_flags_detected reflects only the *current* message (the parser is
+        # instructed to flag the latest user turn, not re-surface historical
+        # mentions — see parser.py), so a genuine urgent symptom said right now
+        # always triggers the alert.
         if red_flags_detected or intent == "emergency_or_red_flag":
+            slots["red_flag_handoff"] = True
             self.save_session(phone, "HUMAN_HANDOFF", slots)
             return "red_flag_alert", {"red_flag_bot_response": self.kb.red_flag_message}
+
+        # A red-flag handoff isn't a dead end for everything else the patient
+        # says. Once the urgent symptom isn't being restated (this turn carries
+        # no red flag), the rest of what they came in for — e.g. lower back
+        # pain alongside the chest pain — is something physiotherapy can
+        # actually help with. So resume intake for it instead of repeating the
+        # same urgent-care alert forever, while reminding them once that the
+        # urgent symptom still needs separate medical attention.
+        resumed_after_red_flag = False
+        if status == "HUMAN_HANDOFF" and slots.get("red_flag_handoff"):
+            slots["red_flag_handoff"] = False
+            status = "COLLECTING_INTAKE"
+            resumed_after_red_flag = True
 
         # 2. Human Handoff Intents — the bot has no clinic-approved way to
         # resolve these itself (see HANDOFF_INTENTS above).
@@ -295,8 +419,17 @@ class StateMachine:
         if faq_key:
             answer = self.kb.response_template(faq_key)
             if answer:
-                if intent == "ask_location" and self.kb.maps_url:
-                    return "location_with_map", {"answer": answer, "maps_url": self.kb.maps_url}
+                self.save_session(phone, status, slots)
+                if intent == "ask_location":
+                    # Location and "how do I reach you" are almost always
+                    # asked together in practice, but the NLU can only return
+                    # one intent for a question — so the location answer
+                    # always includes the phone number too.
+                    contact = self.kb.response_template("phone_email")
+                    if contact:
+                        answer = f"{answer} {contact}"
+                    if self.kb.maps_url:
+                        return "location_with_map", {"answer": answer, "maps_url": self.kb.maps_url}
                 return "faq_response", {"answer": answer}
             # No canned copy configured for this — fall through to normal flow
 
@@ -364,6 +497,15 @@ class StateMachine:
                 if hint:
                     slots["service_hint_shown"] = True
 
+            if resumed_after_red_flag:
+                # Don't let resuming read as "never mind about the chest
+                # pain" — repeat the reminder once, then carry on with what
+                # the clinic can actually help with.
+                hint = (
+                    "Please do get that other symptom checked by a doctor separately — physiotherapy "
+                    f"can't treat it. For the rest, happy to help. {hint}"
+                )
+
             if not slots.get("pain_area"):
                 self.save_session(phone, "COLLECTING_INTAKE", slots)
                 return "request_pain_area", {"service_hint": hint}
@@ -376,6 +518,52 @@ class StateMachine:
             if not slots.get("preferred_service_mode"):
                 self.save_session(phone, "COLLECTING_INTAKE", slots)
                 return "request_service_mode", {"service_hint": hint}
+
+            # Branch confirmation — never silently assume HSR Layout. A
+            # returning patient is offered a one-tap "same as last time?"
+            # using their most recent booking's branch (looked up from the
+            # Bookings sheet); everyone else picks from the full list. This
+            # must resolve before date/slot selection, since it determines
+            # whether we can even check live availability (see the
+            # non-HSR handoff right below).
+            if not slots.get("preferred_branch"):
+                if not slots.get("branch_lookup_done"):
+                    try:
+                        slots["last_branch_id_detected"] = self.sheets.last_branch_for_phone(phone_num) or ""
+                    except Exception:
+                        log.exception("failed to look up last booked branch for phone")
+                        slots["last_branch_id_detected"] = ""
+                    slots["branch_lookup_done"] = True
+
+                last_branch_id = slots.get("last_branch_id_detected")
+                returning_branch_confirmed = slots.get("returning_branch_confirmed")
+
+                if returning_branch_confirmed == "yes" and last_branch_id:
+                    slots["preferred_branch"] = last_branch_id
+                elif last_branch_id and not returning_branch_confirmed:
+                    self.save_session(phone, "COLLECTING_INTAKE", slots)
+                    branch = self.kb.branch_by_id(last_branch_id)
+                    return "confirm_returning_branch", {"branch_name": branch.short_name if branch else "previous"}
+                else:
+                    self.save_session(phone, "COLLECTING_INTAKE", slots)
+                    raw_branches = [
+                        {"id": b.branch_id, "name": b.short_name, "address": b.address} for b in self.kb.branches()
+                    ]
+                    return "request_branch", {"raw_branches": raw_branches}
+
+            # Live calendar/sheet access only exists for the primary (HSR
+            # Layout) branch — for any other branch a human confirms the slot
+            # directly, rather than the bot guessing at availability it can't
+            # actually see.
+            branch_id = slots.get("preferred_branch")
+            if branch_id != self.kb.primary_branch_id and not slots.get("non_primary_branch_handled"):
+                slots["non_primary_branch_handled"] = True
+                branch = self.kb.branch_by_id(branch_id)
+                self.save_session(phone, "HUMAN_HANDOFF", slots)
+                return "non_hsr_branch_handoff", {
+                    "branch_name": branch.short_name if branch else "that branch",
+                    "branch_phone": branch.phone if branch else clinic_phone,
+                }
 
             # All intake complete! Advance to date/time booking
             status = "AWAITING_SLOT_SELECTION"
@@ -391,16 +579,29 @@ class StateMachine:
             # Date provided, show slots if time is not chosen yet
             if not pref_time:
                 try:
-                    free_slots = self.calendar.get_free_slots(pref_date)
-                    if not free_slots:
-                        # Clear date so they pick another date next turn
+                    tod = slots.get("preferred_time_of_day")
+                    # Scan forward like a receptionist: prefer the asked-for
+                    # day/time-of-day, but roll to the next real availability if
+                    # it's fully booked instead of silently showing odd times.
+                    found_date, found_slots, honored = self._find_next_availability(pref_date, tod)
+                    if not found_date:
                         slots["preferred_date"] = None
                         self.save_session(phone, "AWAITING_SLOT_SELECTION", slots)
                         return "no_slots_available", {"date": humanize_date(pref_date), "clinic_phone": clinic_phone}
-                    slots_list_str = "\n".join(f"- {s}" for s in free_slots)
+
+                    # Apologise + signpost only when we couldn't honour the exact
+                    # request (different day, or the requested window was full).
+                    note = ""
+                    if found_date != pref_date or not honored:
+                        note = f"{self._describe_window(pref_date, tod)} is fully booked — here's the next availability:\n\n"
+
+                    # Book against what we actually showed.
+                    slots["preferred_date"] = found_date
+                    slots_list_str = "\n".join(f"- {s}" for s in found_slots)
                     self.save_session(phone, "AWAITING_SLOT_SELECTION", slots)
                     return "show_slots", {
-                        "date": humanize_date(pref_date), "slots_list": slots_list_str, "raw_slots": free_slots,
+                        "date": humanize_date(found_date), "slots_list": slots_list_str,
+                        "raw_slots": found_slots, "note": note,
                     }
                 except Exception:
                     log.exception("failed to retrieve slots")
@@ -416,16 +617,28 @@ class StateMachine:
                 dt_str = f"{pref_date}T{pref_time}"
                 display_dt = humanize_datetime(pref_date, pref_time)
 
+                # Confirmation copy + a tappable "View on Map" button when we
+                # have a maps link (always the case for the HSR branch). Falls
+                # back to plain text if no link is available.
+                confirm_params = {
+                    "date_time": display_dt, "clinic_address": clinic_address, "clinic_phone": clinic_phone,
+                }
+                if self.kb.maps_url:
+                    confirm_params["maps_url"] = self.kb.maps_url
+                    confirm_template = "booking_confirmed_map"
+                else:
+                    confirm_template = "booking_confirmed"
+
                 if self.sheets.booking_exists(phone_num, dt_str):
                     self.save_session(phone, "CONFIRMED", slots)
-                    return "booking_confirmed", {"date_time": display_dt}
+                    return confirm_template, confirm_params
 
                 ev = self.calendar.create_event(name, phone_num, complaint, dt_str)
                 self.sheets.append_booking(
-                    name, phone_num, complaint, dt_str, ev["event_id"]
+                    name, phone_num, complaint, dt_str, ev["event_id"], slots.get("preferred_branch", "")
                 )
                 self.save_session(phone, "CONFIRMED", slots)
-                return "booking_confirmed", {"date_time": display_dt}
+                return confirm_template, confirm_params
             except Exception:
                 log.exception("failed to create booking event")
                 # Clear time slot so they can retry selecting a slot
@@ -440,6 +653,8 @@ class StateMachine:
             # existing appointment still stands rather than going silent or
             # making them re-confirm their name and number from scratch.
             display_dt = humanize_datetime(slots.get("preferred_date", ""), slots.get("preferred_time", ""))
-            return "post_booking_chat", {"date_time": display_dt, "clinic_phone": clinic_phone}
+            return "post_booking_chat", {
+                "date_time": display_dt, "clinic_address": clinic_address, "clinic_phone": clinic_phone,
+            }
 
         return "generic_fallback", {"clinic_phone": clinic_phone}

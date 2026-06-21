@@ -38,6 +38,9 @@ def parse_incoming(payload: dict) -> list[dict]:
                         score, but as an interactive_id it can only mean pain_duration).
         profile_name:   the sender's WhatsApp profile display name, if Meta included
                         it on this notification, else None.
+        message_id:     Meta's unique message id (wamid...). Used to drop duplicate
+                        webhook deliveries — Meta retries a notification until it
+                        gets a 200, so the same message can arrive several times.
 
     Ignores statuses, reactions, and unsupported message types.
     """
@@ -73,5 +76,6 @@ def parse_incoming(payload: dict) -> list[dict]:
                         "text": text,
                         "interactive_id": interactive_id,
                         "profile_name": profile_names.get(phone),
+                        "message_id": msg.get("id"),
                     })
     return out

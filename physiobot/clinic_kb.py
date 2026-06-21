@@ -26,6 +26,27 @@ class ServiceMatch:
     requires_human_review: bool = False
 
 
+@dataclass(frozen=True)
+class Branch:
+    branch_id: str
+    name: str
+    address: str
+    phone: str
+    is_primary: bool = False
+
+    @property
+    def short_name(self) -> str:
+        """The branch name without the redundant "Balance Plus" brand prefix
+        (e.g. "Balance Plus - HSR Layout" -> "HSR Layout"). Used for WhatsApp
+        list row titles, which Meta caps at 24 chars — and every row in that
+        list is already a Balance Plus branch, so the prefix is just noise."""
+        name = self.name
+        for prefix in ("Balance Plus - ", "Balance Plus -", "Balance Plus "):
+            if name.startswith(prefix):
+                return name[len(prefix):].strip()
+        return name
+
+
 class ClinicKB:
     def __init__(self, data: dict | None = None):
         self.data = data if data is not None else load_metadata()
@@ -47,6 +68,44 @@ class ClinicKB:
         return self.data.get("primary_branch", {}).get("official_address", {}).get(
             "full_address_customer_facing", ""
         )
+
+    @property
+    def primary_branch_id(self) -> str:
+        return self.data.get("primary_branch", {}).get("branch_id", "")
+
+    def branches(self) -> list[Branch]:
+        """All branches the clinic operates, primary (HSR Layout) first.
+        other_branches_reference is explicitly "reference only" in the
+        metadata — listed for completeness, not because this bot can check
+        live availability there (there's only one configured calendar/sheet,
+        for the primary branch)."""
+        branches: list[Branch] = []
+        primary = self.data.get("primary_branch", {})
+        if primary.get("branch_id"):
+            branches.append(Branch(
+                branch_id=primary["branch_id"],
+                name=primary.get("branch_name", ""),
+                address=self.clinic_address,
+                phone=self.clinic_phone,
+                is_primary=True,
+            ))
+        for b in self.data.get("other_branches_reference", {}).get("branches", []):
+            if b.get("branch_id"):
+                branches.append(Branch(
+                    branch_id=b["branch_id"],
+                    name=b.get("branch_name", ""),
+                    address=b.get("official_address", ""),
+                    phone=b.get("phone", ""),
+                ))
+        return branches
+
+    def branch_by_id(self, branch_id: str | None) -> Branch | None:
+        if not branch_id:
+            return None
+        for b in self.branches():
+            if b.branch_id == branch_id:
+                return b
+        return None
 
     @property
     def maps_url(self) -> str:

@@ -19,8 +19,9 @@ WhatsApp ─▶ /webhook ─▶ orchestrator ─▶ agent (Ollama + tools) ─�
 
 ## Quick start (local, no WhatsApp yet)
 
-1. **Install deps** (a virtualenv is created for you):
+1. **Install deps** (Python 3.12.3 — pinned in `.python-version`; use pyenv to match prod):
    ```bash
+   pyenv install -s 3.12.3        # one-time; matches render.yaml
    python3 -m venv .venv && source .venv/bin/activate
    pip install -r requirements.txt
    ```

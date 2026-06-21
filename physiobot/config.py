@@ -44,7 +44,6 @@ class LLMConfig:
     ollama_host: str
     groq_model: str
     groq_api_key: str
-    max_tool_iterations: int
 
 
 @dataclass(frozen=True)
@@ -64,6 +63,10 @@ class MetaConfig:
     verify_token: str
     app_secret: str
     use_templates: bool = False
+    # Meta deprecates Graph API versions on a rolling ~2-year schedule, so the
+    # version is configurable (env: META_GRAPH_API_VERSION) rather than buried
+    # as a constant in outbound.py. Bump it deliberately after testing.
+    api_version: str = "v21.0"
 
     @property
     def configured(self) -> bool:
@@ -95,7 +98,6 @@ def get_config(path: str | None = None) -> Config:
             ollama_host=llm.get("ollama_host", "http://localhost:11434"),
             groq_model=llm.get("groq_model", "llama-3.3-70b-versatile"),
             groq_api_key=os.environ.get("GROQ_API_KEY", ""),
-            max_tool_iterations=llm.get("max_tool_iterations", 5),
         ),
         google=GoogleConfig(
             sheet_id=raw["google"]["sheet_id"],
@@ -111,5 +113,6 @@ def get_config(path: str | None = None) -> Config:
             verify_token=os.environ.get("WHATSAPP_VERIFY_TOKEN", "physiobot-verify"),
             app_secret=os.environ.get("WHATSAPP_APP_SECRET", ""),
             use_templates=os.environ.get("WHATSAPP_USE_TEMPLATES", "").lower() == "true" or meta_raw.get("use_templates", False),
+            api_version=os.environ.get("META_GRAPH_API_VERSION", meta_raw.get("api_version", "v21.0")),
         ),
     )

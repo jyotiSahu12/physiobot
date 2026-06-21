@@ -38,8 +38,22 @@ def test_parse_incoming_text():
         }]
     }
     assert webhook.parse_incoming(payload) == [
-        {"phone": "9199", "text": "hi", "interactive_id": None, "profile_name": None}
+        {"phone": "9199", "text": "hi", "interactive_id": None, "profile_name": None, "message_id": None}
     ]
+
+
+def test_parse_incoming_extracts_message_id():
+    payload = {
+        "entry": [{
+            "changes": [{
+                "value": {"messages": [
+                    {"type": "text", "from": "9199", "id": "wamid.ABC123", "text": {"body": "hi"}}
+                ]}
+            }]
+        }]
+    }
+    [event] = webhook.parse_incoming(payload)
+    assert event["message_id"] == "wamid.ABC123"
 
 
 def test_parse_incoming_includes_profile_name():
@@ -83,7 +97,7 @@ def test_parse_incoming_interactive():
         }]
     }
     assert webhook.parse_incoming(payload_btn) == [
-        {"phone": "9199", "text": "Home Visit", "interactive_id": "home_visit", "profile_name": None}
+        {"phone": "9199", "text": "Home Visit", "interactive_id": "home_visit", "profile_name": None, "message_id": None}
     ]
 
     # Test list reply
@@ -104,5 +118,5 @@ def test_parse_incoming_interactive():
         }]
     }
     assert webhook.parse_incoming(payload_list) == [
-        {"phone": "9199", "text": "Neck", "interactive_id": "neck", "profile_name": None}
+        {"phone": "9199", "text": "Neck", "interactive_id": "neck", "profile_name": None, "message_id": None}
     ]

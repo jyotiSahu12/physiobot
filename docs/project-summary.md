@@ -49,10 +49,10 @@ The conversation progresses sequentially through intake slots. The state machine
 | Phase / State | Trigger / Logic | Next Step / Response |
 | :--- | :--- | :--- |
 | **`START`** | Greeting message from user. | Clears old session, welcomes user, transitions to `COLLECTING_INTAKE`. |
-| **`COLLECTING_INTAKE`** | Sequentially validates and prompts for missing slots: name confirmation → consent → complaint → pain details → service mode. | Once name, phone, and complaint are filled, writes to **Patients** Google Sheet. Prompts for the next missing slot. |
-| **`AWAITING_SLOT_SELECTION`** | Intake complete. Collects date, fetches free slots from Calendar, prompts slots, confirms booking on slot selection. | Writes confirmation row to **Bookings** Google Sheet + schedules Calendar Event. Transitions to `CONFIRMED`. |
-| **`CONFIRMED`** | Appointment booked. Greet intent resets the session. | Fallback text redirecting to manual clinic lines. |
-| **`HUMAN_HANDOFF`** | Triggered by red flags, cancellations, payments, insurance queries, report uploads, or declined consent. | Disables bot responses and shares coordinator contact info. Price/hours/home-visit/therapist questions are *not* handoffs — they're answered inline from `clinic_metadata.json`'s canned copy and the conversation continues. `ask_location` additionally returns a tappable Google Maps link (`location_with_map` / `cta_url` — see Key Learning #7). |
+| **`COLLECTING_INTAKE`** | Sequentially validates and prompts for missing slots: name confirmation → consent → complaint → pain details → service mode → branch. | Once name, phone, and complaint are filled, writes to **Patients** Google Sheet. Branch is asked explicitly (never assumed); returning patients get a one-tap "same branch as last time?". Prompts for the next missing slot. |
+| **`AWAITING_SLOT_SELECTION`** | Intake complete (HSR branch). Collects date, fetches free slots from Calendar, prompts slots, confirms booking on slot selection. | Writes confirmation row to **Bookings** Google Sheet (incl. `BranchId`) + schedules Calendar Event. Confirmation includes address + contact. Transitions to `CONFIRMED`. |
+| **`CONFIRMED`** | Appointment booked. An explicit new-booking request resets the session; a bare "hi"/"thank you" is answered warmly without wiping the booking. | Reaffirms the existing appointment (`post_booking_chat`); FAQs still answered inline. |
+| **`HUMAN_HANDOFF`** | Triggered by red flags, cancellations, payments, insurance queries, report uploads, declined consent, or a non-HSR branch choice. | Shares coordinator/branch contact info. Not a permanent dead end: a red-flag handoff resumes intake once the urgent symptom isn't restated (see Key Learning #11). Price/hours/home-visit/therapist questions are *not* handoffs — answered inline and the conversation continues. `ask_location` additionally returns a tappable Google Maps link (`location_with_map` / `cta_url` — see Key Learning #7). |
 
 ### Intake Slots
 1. `phone_number`: Always taken from the WhatsApp sender id — never asked as free text, and the NLU layer can never overwrite it.
@@ -63,10 +63,11 @@ The conversation progresses sequentially through intake slots. The state machine
 6. `pain_duration`: How long the issue has persisted.
 7. `pain_score`: Mild/Moderate/Severe bucket, stored as a representative 0-10 value (3/6/9) for the sheet.
 8. `preferred_service_mode`: `clinic_visit` \| `home_visit` \| `tele_consultation`.
-9. `preferred_date`: Solved target date (YYYY-MM-DD).
-10. `preferred_time`: Target slot start time (HH:MM).
+9. `preferred_branch`: Which branch the patient is booking. Asked explicitly (never assumed); returning patients are offered their last-visited branch for one-tap reuse. Only the primary (HSR Layout) branch has live calendar access — others route to a human handoff.
+10. `preferred_date`: Solved target date (YYYY-MM-DD).
+11. `preferred_time`: Target slot start time (HH:MM).
 
-Button/list replies (consent, pain area/duration/score, service mode, time slot, details confirmation) are never re-parsed by NLU — `state_machine._current_expected_slot()` assigns the WhatsApp option id directly to whichever slot is currently expected.
+Button/list replies (consent, pain area/duration/score, service mode, branch/returning-branch, time slot, details confirmation) are never re-parsed by NLU — `state_machine._current_expected_slot()` assigns the WhatsApp option id directly to whichever slot is currently expected.
 
 ---
 
@@ -121,6 +122,14 @@ To make the bot accessible to elderly users and avoid typos/hallucinations, free
 ### 9. Slot-Merge Must Be Gated by Conversation Phase, Not Just by Slot Name
 * **Problem:** The NLU parser's extracted slots were merged into the session unconditionally on every turn (aside from `phone_number`). An LLM can "helpfully" fill in a `preferred_date` (e.g. defaulting to tomorrow) on a turn where the patient never mentioned a date at all — the bot then skipped straight to showing slots for a day nobody asked for, and an explicit free-text request to change the date afterward was silently dropped by the regex fallback (which had no date-parsing logic whatsoever), making the bot look like it was "resisting" the change.
 * **Resolution:** `preferred_date`/`preferred_time` are now only merged into the session while `status == "AWAITING_SLOT_SELECTION"` — the one phase where asking about dates is actually valid — so a premature LLM guess during intake is discarded rather than silently booked against. `parser.py` gained `parse_natural_date`/`parse_natural_time`, regex-based resolvers (ISO dates, "today"/"tomorrow", weekday names, "23rd June"/"June 23") that activate only when the bot's last message was actually asking about a date or time slot, giving the fallback parser the same date-handling robustness as the LLM path — so changing the date works the same regardless of which NLU backend is live.
+
+### 10. Branch Confirmation + Returning-Patient Memory (Never Assume HSR)
+* **Problem:** The bot silently assumed every booking was for the HSR Layout branch, even though the clinic has four (HSR, Koramangala, Domlur, Brookefield). It also had no memory of where a returning patient went last time. And only the HSR branch has a live Google Calendar/Sheet, so the bot has no way to actually check availability elsewhere.
+* **Resolution:** After intake, the bot now asks which branch explicitly. A returning patient (looked up by phone via `SheetsClient.last_branch_for_phone`, backed by a new `BranchId` column on the Bookings sheet) gets a one-tap "book the same branch as last time?" instead. `ClinicKB.branches()`/`branch_by_id()`/`Branch.short_name` read the metadata's `primary_branch` + `other_branches_reference`. Picking any non-HSR branch routes to `non_hsr_branch_handoff` (a human confirms the slot) rather than the bot fabricating availability it can't see. `Branch.short_name` strips the redundant "Balance Plus - " prefix so row titles fit Meta's 24-char list-row cap (error 131009 "Row title is too long"); the dynamic `request_branch`/`show_slots` row builders also defensively truncate titles/descriptions, since only the static-template path did before.
+
+### 11. Red Flags Must Be Scoped to the Current Message, and Aren't a Dead End
+* **Problem:** The LLM parser was told to detect red flags across "the user's latest input and the chat history", so it kept re-surfacing an earlier urgent symptom (e.g. chest pain) on every subsequent turn. A patient who said "chest and lower back pain", got the (correct) urgent-care alert, then asked "can you help with my lower back pain?" just got the same alert again — even though lower back pain is exactly what the clinic treats.
+* **Resolution:** The parser prompt now scopes `red_flags_detected` to the **most recent user message only** (the regex fallback already did this), with an explicit instruction not to re-report historical red flags. The state machine records a `red_flag_handoff` flag when it alerts; on a later turn that carries no red flag, it resumes intake (`resumed_after_red_flag`) and prepends a one-time reminder that the urgent symptom still needs separate medical attention — so the bot helps with what it can while respectfully staying in its lane. A literal-substring cross-check was deliberately *avoided* here: the LLM normalizes symptoms to canonical keywords (e.g. "my chest hurts" → "chest pain"), so substring-matching the message would risk discarding a genuine red flag — an unacceptable false negative on safety.
 
 ---
 

@@ -27,9 +27,17 @@ EXPECTED_SLOT_CUES = [
     ("is that correct", "details_confirmed"),
     ("do you agree that balance plus can contact you", "consent"),
     ("what main problem or pain are you facing", "complaint"),
-    ("what date would you like to come in", "preferred_date"),
+    ("when would you like to come in", "preferred_date"),
     ("which time works best for you", "preferred_date_or_time"),  # could be a new date instead of a time pick
 ]
+
+# Rough time-of-day buckets a patient might say ("tomorrow morning", "evening").
+# Order matters only for tie-breaking; the earliest mention in the text wins.
+_TIME_OF_DAY_KEYWORDS = {
+    "morning": ["morning"],
+    "afternoon": ["afternoon", "noon"],
+    "evening": ["evening", "tonight", "night"],
+}
 
 _MONTH_ALIASES = {
     "jan": 1, "january": 1, "feb": 2, "february": 2, "mar": 3, "march": 3,
@@ -106,6 +114,21 @@ def parse_natural_date(text: str, today: dt.date) -> str | None:
     return None
 
 
+def parse_time_of_day(text: str) -> str | None:
+    """Resolve a rough time-of-day from natural phrasing ("tomorrow morning",
+    "this evening") to "morning" | "afternoon" | "evening", or None. The
+    earliest-mentioned bucket wins, so "today evening or tomorrow morning"
+    resolves to "evening" (paired with the also-earliest date, today)."""
+    text = text.lower()
+    best, best_pos = None, len(text) + 1
+    for tod, keywords in _TIME_OF_DAY_KEYWORDS.items():
+        for kw in keywords:
+            pos = text.find(kw)
+            if pos != -1 and pos < best_pos:
+                best, best_pos = tod, pos
+    return best
+
+
 def parse_natural_time(text: str) -> str | None:
     """Best-effort free-text time resolution (e.g. "1pm", "13:00") for the
     regex NLU fallback, in case a patient types a time instead of tapping the
@@ -170,6 +193,7 @@ class Parser:
             "ask_price",
             "ask_services",
             "ask_location",
+            "ask_contact",
             "ask_timings",
             "ask_home_visit",
             "ask_online_consultation",
@@ -195,7 +219,8 @@ class Parser:
         # phone_number the NLU layer returns so it can never be silently overwritten.
         system_prompt = (
             "You are an NLU parser for a physiotherapy clinic bot. "
-            "Analyze the user's latest input and the chat history to extract the intent and slot values, and detect any medical red flags.\n\n"
+            "Use the chat history only as context for intent and slot values. "
+            "Extract the intent and slot values, and detect any medical red flags.\n\n"
             "You MUST respond with a single valid JSON object and nothing else. Do not wrap the JSON in markdown code blocks. "
             "Never include any conversational preamble or explanations.\n\n"
             f"Today's date is: {today_str}.\n\n"
@@ -207,6 +232,10 @@ class Parser:
             f"{json.dumps(pain_duration_options)}\n\n"
             "Urgent medical red flags to check for:\n"
             f"{json.dumps(red_flags_list)}\n\n"
+            "IMPORTANT: only populate red_flags_detected for symptoms mentioned in the user's MOST RECENT message. "
+            "Do NOT re-report a red flag from earlier messages if the latest message does not mention it — "
+            "the patient may have moved on to a non-urgent issue (e.g. earlier 'chest pain', now 'help with lower back pain'), "
+            "which the clinic can help with.\n\n"
             "Expected JSON Output Schema:\n"
             "{\n"
             '  "intent": "one_of_supported_intents_or_greeting_or_other",\n'
@@ -217,12 +246,13 @@ class Parser:
             '    "pain_duration": "one_of_pain_duration_options_or_null",\n'
             '    "pain_score": "integer_0_to_10_or_null",\n'
             '    "preferred_service_mode": "clinic_visit" | "home_visit" | "tele_consultation" | null,\n'
-            '    "preferred_date": "YYYY-MM-DD_or_null", // Resolve relative dates like tomorrow/Monday using today\'s date\n'
-            '    "preferred_time": "HH:MM_or_null",\n'
+            '    "preferred_date": "YYYY-MM-DD_or_null", // Resolve relative dates like today/tomorrow/Monday using today\'s date. "today evening" -> today; "tomorrow morning" -> tomorrow. If only a time of day is given with no day (e.g. just "evening"), use today.\n'
+            '    "preferred_time_of_day": "morning" | "afternoon" | "evening" | null, // rough window if the patient says "morning"/"evening" etc.\n'
+            '    "preferred_time": "HH:MM_or_null", // only if the patient gave an exact time like 1pm/13:00\n'
             '    "consent_given": "yes" | "no" | null, // whether the patient agreed to be contacted and to share symptom details\n'
             '    "details_confirmed": "yes" | "no" | null // whether the patient confirmed their detected WhatsApp name and number are correct\n'
             "  },\n"
-            '  "red_flags_detected": [] // List of red flag keywords/phrases from the urgent list if matched in user inputs\n'
+            '  "red_flags_detected": [] // Red flags from the urgent list matched in the MOST RECENT user message only\n'
             "}"
         )
 
@@ -266,6 +296,8 @@ class Parser:
                 intent = "ask_price"
             elif any(l in lower_msg for l in ["where", "address", "branch", "location", "clinic at"]):
                 intent = "ask_location"
+            elif any(c in lower_msg for c in ["contact", "phone number", "email", "reach you", "call you"]):
+                intent = "ask_contact"
             elif any(t in lower_msg for t in ["timings", "opening hours", "open hours", "what time do you open"]):
                 intent = "ask_timings"
             elif any(ins in lower_msg for ins in ["insurance", "reimbursement", "claim", "coverage"]):
@@ -334,18 +366,27 @@ class Parser:
                 if score_match:
                     slots["pain_score"] = int(score_match.group(1))
 
-            # Date change / time pick — only when the bot is actually in the
-            # date/time phase (see EXPECTED_SLOT_CUES), so a stray number or
-            # month name elsewhere in the conversation never gets mistaken for
-            # a scheduling answer.
+            # Date / time-of-day / exact-time — only when the bot is actually in
+            # the date/time phase (see EXPECTED_SLOT_CUES), so a stray number or
+            # month name elsewhere in the conversation never gets mistaken for a
+            # scheduling answer. Patients answer "when?" loosely ("today evening",
+            # "tomorrow morning"), so resolve a date AND a rough time-of-day; the
+            # state machine then narrows the slot list to that window.
             if expected_slot in ("preferred_date", "preferred_date_or_time"):
                 date_val = parse_natural_date(user_msg, today.date())
+                tod_val = parse_time_of_day(user_msg)
                 if date_val:
                     slots["preferred_date"] = date_val
+                elif tod_val:
+                    # A bare time-of-day with no day ("evening") colloquially
+                    # means today — don't get stuck re-asking for the day.
+                    slots["preferred_date"] = today.date().isoformat()
                 elif expected_slot == "preferred_date_or_time":
                     time_val = parse_natural_time(user_msg)
                     if time_val:
                         slots["preferred_time"] = time_val
+                if tod_val:
+                    slots["preferred_time_of_day"] = tod_val
 
             # Service mode
             if "home" in lower_msg:

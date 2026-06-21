@@ -37,6 +37,7 @@ class Orchestrator:
         text: str,
         interactive_id: str | None = None,
         profile_name: str | None = None,
+        message_id: str | None = None,
     ) -> str:
         """Process one inbound message and send the template reply.
         Returns the formatted template text (useful for tests / local simulation).
@@ -49,6 +50,14 @@ class Orchestrator:
         it from being returned/sent."""
         reply = FALLBACK
         try:
+            # Drop duplicate webhook deliveries: Meta retries until it gets a
+            # 200, so the same message can arrive several times. Claiming the id
+            # before doing any work prevents a double reply or double booking.
+            # (No-op for /simulate, which passes no message_id.)
+            if not self.store.mark_processed(message_id):
+                log.info("skipping duplicate message %s for %s", message_id, phone)
+                return reply
+
             self.store.touch_session(phone)
             self.store.add_message(phone, "user", text)
 

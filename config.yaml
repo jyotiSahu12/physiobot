@@ -20,7 +20,6 @@ llm:
   ollama_model: "qwen2.5"
   ollama_host: "http://localhost:11434"
   groq_model: "llama-3.3-70b-versatile"   # GROQ_API_KEY comes from the environment
-  max_tool_iterations: 5
 
 google:
   # Spreadsheet ID from its URL: docs.google.com/spreadsheets/d/<THIS_PART>/edit

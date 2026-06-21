@@ -45,3 +45,21 @@ def test_send_template_interactive_configured(config):
         # not the raw snake_case slot value
         assert "clinic_visit" not in reply
         assert "consultation" in reply.lower()
+
+        # The Graph API version in the URL comes from config (default v21.0).
+        url = mock_post.call_args.args[0] if mock_post.call_args.args else mock_post.call_args.kwargs.get("url", "")
+        assert "/v21.0/1108484/messages" in url
+
+
+def test_send_uses_configured_graph_api_version(config):
+    meta = MetaConfig(
+        token="EAA...", phone_number_id="999", verify_token="v", app_secret="s",
+        use_templates=False, api_version="v25.0",
+    )
+    out = Outbound(config)
+    object.__setattr__(out.config, "meta", meta)  # Config is frozen
+    with patch("httpx.post") as mock_post:
+        mock_post.return_value.raise_for_status = lambda: None
+        out.send_text("9199", "hello")
+        url = mock_post.call_args.args[0] if mock_post.call_args.args else mock_post.call_args.kwargs.get("url", "")
+        assert url == "https://graph.facebook.com/v25.0/999/messages"

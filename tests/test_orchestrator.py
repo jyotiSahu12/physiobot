@@ -84,6 +84,22 @@ def test_handle_message_interactive_reply_bypasses_parser(config, tmp_path):
     }]
 
 
+def test_handle_message_dedupes_duplicate_message_id(config, tmp_path):
+    """Meta retries a webhook until it gets a 200, so the same message can
+    arrive twice — the second delivery must be dropped, not re-answered or
+    (worse) re-booked."""
+    store = Store(tmp_path / "o.db")
+    sm = StubStateMachine()
+    out = RecordingOutbound()
+    orch = Orchestrator(config, store=store, parser=StubParser(), state_machine=sm, outbound=out)
+
+    orch.handle_message("9199", "hi", message_id="wamid.DUP")
+    orch.handle_message("9199", "hi", message_id="wamid.DUP")  # duplicate delivery
+
+    assert len(sm.calls) == 1
+    assert len(out.templates_sent) == 1
+
+
 def test_handle_message_parser_failure_falls_back(config, tmp_path):
     class BoomParser:
         def parse_message(self, history):
@@ -103,6 +119,9 @@ def test_handle_message_store_failure_still_sends_fallback(config):
     a live process) raised uncaught inside a FastAPI BackgroundTask and silently
     swallowed the turn — the patient got no reply at all."""
     class BoomStore:
+        def mark_processed(self, message_id):
+            return True
+
         def touch_session(self, phone):
             raise RuntimeError("db is gone")
 

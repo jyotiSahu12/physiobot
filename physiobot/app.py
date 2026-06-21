@@ -21,7 +21,7 @@ config = get_config()
 orchestrator = Orchestrator(config)
 
 # Bump on each meaningful deploy so /healthz tells us exactly what's live.
-BUILD = "2026-06-21-clinic-kb-v3-migration"
+BUILD = "2026-06-21-py312-graph-version-webhook-idempotency"
 
 
 @app.get("/healthz")
@@ -61,6 +61,7 @@ async def receive(request: Request, background: BackgroundTasks):
             event["text"],
             interactive_id=event["interactive_id"],
             profile_name=event["profile_name"],
+            message_id=event.get("message_id"),
         )
     return {"status": "received"}
 
