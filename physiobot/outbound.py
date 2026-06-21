@@ -36,6 +36,8 @@ class Outbound:
         try:
             resp = httpx.post(url, json=payload, headers=headers, timeout=15)
             resp.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            log.error("failed to send WhatsApp message to %s: Status %s, Response: %s", to, e.response.status_code, e.response.text)
         except httpx.HTTPError:
             log.exception("failed to send WhatsApp message to %s", to)
 
@@ -56,6 +58,8 @@ class Outbound:
         try:
             resp = httpx.post(url, json=payload, headers=headers, timeout=15)
             resp.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            log.error("failed to send WhatsApp template message (%s) to %s: Status %s, Response: %s", template_key, to, e.response.status_code, e.response.text)
         except httpx.HTTPError:
             log.exception("failed to send WhatsApp template message (%s) to %s", template_key, to)
         

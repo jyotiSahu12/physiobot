@@ -116,9 +116,73 @@ class Parser:
             return parsed
         except Exception:
             log.exception("failed to parse LLM response")
-            # Return a generic safe parsing result
+            # Fallback NLU rules when LLM fails or is empty
+            user_msg = history[-1]["content"] if history else ""
+            lower_msg = user_msg.lower().strip()
+            
+            intent = "other"
+            slots = {}
+            red_flags_detected = []
+
+            # 1. Intent matching
+            if any(greet in lower_msg for greet in ["hello", "hi", "hey", "hola", "namaste", "morning", "evening"]):
+                intent = "greeting"
+            elif any(word in lower_msg for word in ["book", "appointment", "schedule", "visit", "consult"]):
+                intent = "book_appointment"
+            elif "cancel" in lower_msg:
+                intent = "cancel_appointment"
+            elif "reschedule" in lower_msg:
+                intent = "reschedule_appointment"
+            elif any(p in lower_msg for p in ["price", "cost", "fee", "charge", "package", "rate"]):
+                intent = "ask_price"
+            elif any(l in lower_msg for l in ["where", "address", "branch", "location", "clinic at"]):
+                intent = "ask_location"
+            elif any(t in lower_msg for t in ["time", "timing", "hour", "when", "schedule"]):
+                intent = "ask_timings"
+
+            # 2. Basic slot extraction
+            # Phone number (e.g. +917054256969 or 7054256969)
+            phone_match = re.search(r"(\+?\d{10,12})", user_msg)
+            if phone_match:
+                slots["phone_number"] = phone_match.group(1)
+
+            # Name (e.g. "my name is Asha" or "i am Asha")
+            name_match = re.search(r"(?:my name is|i am)\s+([a-zA-Z]+)", lower_msg)
+            if name_match:
+                slots["full_name"] = name_match.group(1).title()
+
+            # Pain score (integer 0 to 10)
+            score_match = re.search(r"\b([0-9]|10)\b", lower_msg)
+            if score_match:
+                slots["pain_score"] = int(score_match.group(1))
+
+            # Service mode
+            if "home" in lower_msg:
+                slots["preferred_service_mode"] = "home_visit"
+            elif "clinic" in lower_msg:
+                slots["preferred_service_mode"] = "clinic_visit"
+            elif "online" in lower_msg or "tele" in lower_msg or "video" in lower_msg:
+                slots["preferred_service_mode"] = "tele_consultation"
+
+            # Pain area
+            for area in pain_area_options:
+                if area in lower_msg:
+                    slots["pain_area"] = area
+                    break
+
+            # Pain duration
+            for dur in pain_duration_options:
+                if dur in lower_msg:
+                    slots["pain_duration"] = dur
+                    break
+
+            # Red flags scan
+            for rf in red_flags_list:
+                if rf in lower_msg:
+                    red_flags_detected.append(rf)
+
             return {
-                "intent": "other",
-                "slots": {},
-                "red_flags_detected": []
+                "intent": intent,
+                "slots": slots,
+                "red_flags_detected": red_flags_detected
             }
