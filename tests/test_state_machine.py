@@ -39,7 +39,7 @@ def test_state_machine_slot_filling_flow(config, tmp_path, mock_sheets, mock_cal
     # Step 1: Greeting
     template, params = sm.process_turn(phone, "greeting", {}, [])
     assert template == "welcome_greeting"
-    assert params["clinic_name"] == config.clinic.name
+    assert params["clinic_name"] == sm.metadata["business_context"]["clinic_display_name"]
     
     # Step 2: User provides name & phone
     template, params = sm.process_turn(phone, "book_appointment", {"full_name": "Asha", "phone_number": "12345"}, [])

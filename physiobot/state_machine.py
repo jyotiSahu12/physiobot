@@ -110,6 +110,8 @@ class StateMachine:
             (template_key, template_parameters_dict)
         """
         status, slots = self.get_session(phone)
+        clinic_name = self.metadata.get("business_context", {}).get("clinic_display_name") or self.config.clinic.name
+        clinic_phone = self.metadata.get("hsr_branch", {}).get("contact", {}).get("primary_phone") or self.config.clinic.contact_number
 
         # Check for session inactivity timeout (e.g. 4 hours = 14400 seconds)
         with sqlite3.connect(self.db_path) as conn:
@@ -136,7 +138,7 @@ class StateMachine:
             self.save_session(phone, "COLLECTING_INTAKE", slots)
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute("DELETE FROM messages WHERE phone = ?", (phone,))
-            return "welcome_greeting", {"clinic_name": self.config.clinic.name}
+            return "welcome_greeting", {"clinic_name": clinic_name}
 
         # Reset session slots on new flow start to avoid carrying over old bookings
         if intent in ["greeting", "book_appointment"] and status in ["CONFIRMED", "HUMAN_HANDOFF"]:
@@ -163,8 +165,10 @@ class StateMachine:
                 slots[k] = v
 
         # 1. Urgent Triage & Red Flags
-        triage_cfg = self.metadata.get("triage_and_safety", {})
-        red_flag_response = triage_cfg.get(
+        safety_cfg = self.metadata.get("medical_safety_and_red_flags") or self.metadata.get("triage_and_safety") or {}
+        red_flag_response = safety_cfg.get(
+            "red_flag_response"
+        ) or safety_cfg.get(
             "red_flag_bot_response",
             "Your symptoms may need urgent medical attention. Please visit the nearest hospital.",
         )
@@ -173,34 +177,35 @@ class StateMachine:
             return "red_flag_alert", {"red_flag_bot_response": red_flag_response}
 
         # 2. Human Handoff Intents
-        bot_cfg = self.metadata.get("bot_configuration", {})
-        handoff_intents = bot_cfg.get("handoff_to_human_when", [])
+        handoff_intents = [
+            "cancel_appointment",
+            "insurance_query",
+            "payment_query",
+            "medical_report_query"
+        ]
         if (
             intent in handoff_intents
             or intent == "cancel_appointment"
         ):
             self.save_session(phone, "HUMAN_HANDOFF", slots)
-            return "human_handoff", {"clinic_phone": self.config.clinic.contact_number}
+            return "human_handoff", {"clinic_phone": clinic_phone}
 
         # 3. FAQ Intents (stay in current state, just respond)
-        faqs = self.metadata.get("faqs", [])
-        faq_intent_map = {
-            "ask_price": "pricing",
-            "ask_services": "services",
-            "ask_location": "locations",
-            "ask_timings": "timings",
-            "ask_home_visit": "home_visit",
-            "ask_online_consultation": "online_consultation",
-            "ask_therapist_details": "therapist",
+        faqs = self.metadata.get("faq_for_bot") or self.metadata.get("faqs") or []
+        faq_intent_keywords = {
+            "ask_price": ["price", "fee", "cost", "charge"],
+            "ask_services": ["treat", "problems", "services", "specialty"],
+            "ask_location": ["branch", "hsr", "where", "location", "address"],
+            "ask_timings": ["timing", "hour", "open", "time"],
+            "ask_home_visit": ["home visit", "home care", "at-home"],
+            "ask_online_consultation": ["virtual", "online", "tele"],
+            "ask_therapist_details": ["therapist", "doctor", "physiotherapist", "team"],
         }
-        if intent in faq_intent_map or intent == "faq_query":
-            keyword = faq_intent_map.get(intent, "physiotherapy")
+        if intent in faq_intent_keywords or intent == "faq_query":
+            keywords = faq_intent_keywords.get(intent, ["physiotherapy"])
             matched_faq = None
             for faq in faqs:
-                if (
-                    keyword in faq["question"].lower()
-                    or keyword in faq["answer"].lower()
-                ):
+                if any(kw in faq["question"].lower() or kw in faq["answer"].lower() for kw in keywords):
                     matched_faq = faq
                     break
 
@@ -215,7 +220,7 @@ class StateMachine:
         if status == "START":
             if intent == "greeting":
                 self.save_session(phone, "COLLECTING_INTAKE", slots)
-                return "welcome_greeting", {"clinic_name": self.config.clinic.name}
+                return "welcome_greeting", {"clinic_name": clinic_name}
             # Fallback to intake if not a greeting
             status = "COLLECTING_INTAKE"
 
@@ -271,14 +276,14 @@ class StateMachine:
                         slots["preferred_date"] = None
                         self.save_session(phone, "AWAITING_SLOT_SELECTION", slots)
                         return "generic_fallback", {
-                            "clinic_phone": f"No available slots on {pref_date}. Please try another date or contact {self.config.clinic.contact_number}."
+                            "clinic_phone": f"No available slots on {pref_date}. Please try another date or contact {clinic_phone}."
                         }
                     slots_list_str = "\n".join(f"- {s}" for s in free_slots)
                     self.save_session(phone, "AWAITING_SLOT_SELECTION", slots)
                     return "show_slots", {"date": pref_date, "slots_list": slots_list_str, "raw_slots": free_slots}
                 except Exception:
                     log.exception("failed to retrieve slots")
-                    return "generic_fallback", {"clinic_phone": self.config.clinic.contact_number}
+                    return "generic_fallback", {"clinic_phone": clinic_phone}
 
             # Date and time both present — execute booking!
             try:
@@ -303,14 +308,14 @@ class StateMachine:
                 slots["preferred_time"] = None
                 self.save_session(phone, "AWAITING_SLOT_SELECTION", slots)
                 return "generic_fallback", {
-                    "clinic_phone": f"Booking failed. Please try a different slot or call {self.config.clinic.contact_number}."
+                    "clinic_phone": f"Booking failed. Please try a different slot or call {clinic_phone}."
                 }
 
         if status == "CONFIRMED":
             if intent == "greeting":
                 # Start new intake session
                 self.save_session(phone, "COLLECTING_INTAKE", {})
-                return "welcome_greeting", {"clinic_name": self.config.clinic.name}
-            return "generic_fallback", {"clinic_phone": self.config.clinic.contact_number}
+                return "welcome_greeting", {"clinic_name": clinic_name}
+            return "generic_fallback", {"clinic_phone": clinic_phone}
 
-        return "generic_fallback", {"clinic_phone": self.config.clinic.contact_number}
+        return "generic_fallback", {"clinic_phone": clinic_phone}

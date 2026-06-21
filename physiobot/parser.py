@@ -48,11 +48,26 @@ class Parser:
         today = dt.datetime.now(tz)
         today_str = today.strftime("%A, %Y-%m-%d")
 
-        bot_cfg = self.metadata.get("bot_configuration", {})
-        supported_intents = bot_cfg.get("supported_intents", [])
+        supported_intents = [
+            "greeting",
+            "book_appointment",
+            "reschedule_appointment",
+            "cancel_appointment",
+            "ask_price",
+            "ask_services",
+            "ask_location",
+            "ask_timings",
+            "ask_home_visit",
+            "ask_online_consultation",
+            "ask_therapist_details",
+            "insurance_query",
+            "payment_query",
+            "medical_report_query",
+            "emergency_or_red_flag"
+        ]
         
-        triage_cfg = self.metadata.get("triage_and_safety", {})
-        red_flags_list = triage_cfg.get("red_flags_requiring_urgent_medical_referral", [])
+        safety_cfg = self.metadata.get("medical_safety_and_red_flags") or self.metadata.get("triage_and_safety") or {}
+        red_flags_list = safety_cfg.get("emergency_or_doctor_referral_triggers") or safety_cfg.get("red_flags_requiring_urgent_medical_referral") or []
 
         pain_area_options = [
             "neck", "shoulder", "upper back", "lower back", "knee", "ankle",
@@ -138,6 +153,12 @@ class Parser:
                 intent = "ask_location"
             elif any(t in lower_msg for t in ["timings", "opening hours", "open hours", "what time do you open"]):
                 intent = "ask_timings"
+            elif any(ins in lower_msg for ins in ["insurance", "reimbursement", "claim", "coverage"]):
+                intent = "insurance_query"
+            elif any(pay in lower_msg for pay in ["payment", "pay", "upi", "cash", "card", "refund", "invoice"]):
+                intent = "payment_query"
+            elif any(rep in lower_msg for rep in ["report", "prescription", "scan", "mri", "xray", "x-ray"]):
+                intent = "medical_report_query"
 
             # 2. Basic slot extraction
             # Phone number (e.g. +917054256969 or 7054256969)
