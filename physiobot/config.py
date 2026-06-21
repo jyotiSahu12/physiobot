@@ -63,6 +63,7 @@ class MetaConfig:
     phone_number_id: str
     verify_token: str
     app_secret: str
+    use_templates: bool = False
 
     @property
     def configured(self) -> bool:
@@ -83,6 +84,7 @@ def get_config(path: str | None = None) -> Config:
     cfg_path = Path(path) if path else ROOT / "config.yaml"
     raw = yaml.safe_load(cfg_path.read_text())
     llm = raw["llm"]
+    meta_raw = raw.get("meta", {})
 
     return Config(
         clinic=ClinicConfig(**raw["clinic"]),
@@ -108,5 +110,6 @@ def get_config(path: str | None = None) -> Config:
             phone_number_id=os.environ.get("WHATSAPP_PHONE_NUMBER_ID", ""),
             verify_token=os.environ.get("WHATSAPP_VERIFY_TOKEN", "physiobot-verify"),
             app_secret=os.environ.get("WHATSAPP_APP_SECRET", ""),
+            use_templates=os.environ.get("WHATSAPP_USE_TEMPLATES", "").lower() == "true" or meta_raw.get("use_templates", False),
         ),
     )

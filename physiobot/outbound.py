@@ -43,13 +43,18 @@ class Outbound:
 
     def send_template(self, to: str, template_key: str, **kwargs) -> str:
         """Send a pre-registered WhatsApp template message.
-        Returns the text response (used for local simulation / test replies)."""
-        # Resolve text fallback first for dev log or simulation return value
+        If use_templates is False, sends the formatted template fallback text
+        as a regular WhatsApp message."""
         fallback_text = format_template_text(template_key, **kwargs)
 
         meta = self.config.meta
         if not meta.configured:
             log.info("[DEV] [TEMPLATE: %s] would send to %s: %s", template_key, to, fallback_text)
+            return fallback_text
+
+        if not meta.use_templates:
+            # Fall back to sending as regular free-form text message (for development/testing)
+            self.send_text(to, fallback_text)
             return fallback_text
 
         url = f"{GRAPH_URL}/{meta.phone_number_id}/messages"
