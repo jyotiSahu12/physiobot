@@ -84,3 +84,53 @@ def test_state_machine_slot_filling_flow(config, tmp_path, mock_sheets, mock_cal
 
     status, slots = sm.get_session(phone)
     assert status == "CONFIRMED"
+
+
+def test_state_machine_restart_and_inactivity_reset(config, tmp_path, mock_sheets, mock_calendar):
+    import sqlite3
+    import time
+    
+    sm = StateMachine(config, db_path=tmp_path / "sm.db", sheets_client=mock_sheets, calendar_client=mock_calendar)
+    phone = "9988"
+    
+    # Pre-populate session and slots
+    sm.save_session(phone, "AWAITING_SLOT_SELECTION", {"full_name": "Naman", "pain_score": 8})
+    
+    # Pre-populate messages
+    with sqlite3.connect(sm.db_path) as conn:
+        conn.execute("INSERT INTO messages (phone, role, content, ts) VALUES (?, 'user', 'my back hurts', ?)", (phone, time.time() - 10))
+        conn.execute("INSERT INTO messages (phone, role, content, ts) VALUES (?, 'user', 'restart', ?)", (phone, time.time()))
+        
+    # Process turn with restart message present
+    template, params = sm.process_turn(phone, "greeting", {}, [])
+    
+    assert template == "welcome_greeting"
+    status, slots = sm.get_session(phone)
+    assert status == "COLLECTING_INTAKE"
+    assert slots == {}
+    
+    # Check that messages are deleted
+    with sqlite3.connect(sm.db_path) as conn:
+        row = conn.execute("SELECT COUNT(*) FROM messages WHERE phone = ?", (phone,)).fetchone()
+        assert row[0] == 0
+
+    # Test Inactivity Reset
+    sm.save_session(phone, "AWAITING_SLOT_SELECTION", {"full_name": "Naman"})
+    # Manually backdate updated_at to > 4 hours ago
+    with sqlite3.connect(sm.db_path) as conn:
+        conn.execute("UPDATE sessions SET updated_at = ? WHERE phone = ?", (time.time() - 15000, phone))
+        # Insert a new message
+        conn.execute("INSERT INTO messages (phone, role, content, ts) VALUES (?, 'user', 'hello', ?)", (phone, time.time()))
+        
+    # Process turn after long inactivity
+    template, params = sm.process_turn(phone, "greeting", {}, [])
+    
+    status, slots = sm.get_session(phone)
+    assert status == "COLLECTING_INTAKE" # Transitioned from START because of greeting
+    assert slots == {}
+    
+    # Check that messages are deleted
+    with sqlite3.connect(sm.db_path) as conn:
+        row = conn.execute("SELECT COUNT(*) FROM messages WHERE phone = ?", (phone,)).fetchone()
+        assert row[0] == 0
+

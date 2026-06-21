@@ -111,18 +111,39 @@ class StateMachine:
         """
         status, slots = self.get_session(phone)
 
-        # Reset session slots on new flow start to avoid carrying over old bookings
-        if intent in ["greeting", "book_appointment"] and status in ["CONFIRMED", "HUMAN_HANDOFF"]:
+        # Check for session inactivity timeout (e.g. 4 hours = 14400 seconds)
+        with sqlite3.connect(self.db_path) as conn:
+            row = conn.execute("SELECT updated_at FROM sessions WHERE phone = ?", (phone,)).fetchone()
+            last_active = row[0] if row else None
+        
+        if last_active and (time.time() - last_active > 14400):
             slots = {}
-            status = "COLLECTING_INTAKE"
+            status = "START"
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("DELETE FROM messages WHERE phone = ?", (phone,))
 
-        # Fetch the latest user message text to check for rescheduling phrases
+        # Fetch the latest user message text to check for keywords/intents
         with sqlite3.connect(self.db_path) as conn:
             row = conn.execute(
                 "SELECT content FROM messages WHERE phone = ? AND role = 'user' ORDER BY id DESC LIMIT 1", (phone,)
             ).fetchone()
             user_msg = row[0] if row else ""
         lower_msg = user_msg.lower().strip()
+
+        # Handle explicit restart request
+        if "restart" in lower_msg or "start over" in lower_msg:
+            slots = {}
+            self.save_session(phone, "COLLECTING_INTAKE", slots)
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("DELETE FROM messages WHERE phone = ?", (phone,))
+            return "welcome_greeting", {"clinic_name": self.config.clinic.name}
+
+        # Reset session slots on new flow start to avoid carrying over old bookings
+        if intent in ["greeting", "book_appointment"] and status in ["CONFIRMED", "HUMAN_HANDOFF"]:
+            slots = {}
+            status = "COLLECTING_INTAKE"
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("DELETE FROM messages WHERE phone = ?", (phone,))
 
         # Handle rescheduling requests by clearing slots and prompting for new date
         if status in ["AWAITING_SLOT_SELECTION", "CONFIRMED"] and (
@@ -254,7 +275,7 @@ class StateMachine:
                         }
                     slots_list_str = "\n".join(f"- {s}" for s in free_slots)
                     self.save_session(phone, "AWAITING_SLOT_SELECTION", slots)
-                    return "show_slots", {"date": pref_date, "slots_list": slots_list_str}
+                    return "show_slots", {"date": pref_date, "slots_list": slots_list_str, "raw_slots": free_slots}
                 except Exception:
                     log.exception("failed to retrieve slots")
                     return "generic_fallback", {"clinic_phone": self.config.clinic.contact_number}

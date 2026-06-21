@@ -8,7 +8,12 @@ import logging
 import httpx
 
 from .config import Config, get_config
-from .templates import build_whatsapp_payload, format_template_text
+from .templates import (
+    TEMPLATES,
+    build_whatsapp_interactive_payload,
+    build_whatsapp_payload,
+    format_template_text,
+)
 
 log = logging.getLogger("physiobot.outbound")
 
@@ -43,8 +48,8 @@ class Outbound:
 
     def send_template(self, to: str, template_key: str, **kwargs) -> str:
         """Send a pre-registered WhatsApp template message.
-        If use_templates is False, sends the formatted template fallback text
-        as a regular WhatsApp message."""
+        If the template is defined as interactive, it sends it as a native WhatsApp interactive button/list.
+        If use_templates is False, sends the template fallback text as a regular text message."""
         fallback_text = format_template_text(template_key, **kwargs)
 
         meta = self.config.meta
@@ -52,14 +57,21 @@ class Outbound:
             log.info("[DEV] [TEMPLATE: %s] would send to %s: %s", template_key, to, fallback_text)
             return fallback_text
 
-        if not meta.use_templates:
+        template_cfg = TEMPLATES.get(template_key, TEMPLATES["generic_fallback"])
+        is_interactive = "interactive_type" in template_cfg
+
+        url = f"{GRAPH_URL}/{meta.phone_number_id}/messages"
+        headers = {"Authorization": f"Bearer {meta.token}"}
+
+        if is_interactive:
+            payload = build_whatsapp_interactive_payload(template_key, to, **kwargs)
+        elif not meta.use_templates:
             # Fall back to sending as regular free-form text message (for development/testing)
             self.send_text(to, fallback_text)
             return fallback_text
+        else:
+            payload = build_whatsapp_payload(template_key, to, **kwargs)
 
-        url = f"{GRAPH_URL}/{meta.phone_number_id}/messages"
-        payload = build_whatsapp_payload(template_key, to, **kwargs)
-        headers = {"Authorization": f"Bearer {meta.token}"}
         try:
             resp = httpx.post(url, json=payload, headers=headers, timeout=15)
             resp.raise_for_status()

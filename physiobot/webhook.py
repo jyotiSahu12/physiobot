@@ -24,16 +24,35 @@ def verify_signature(body: bytes, signature_header: str, app_secret: str) -> boo
 
 
 def parse_incoming(payload: dict) -> list[tuple[str, str]]:
-    """Extract [(from_phone, text), ...] text messages from a Meta webhook
-    payload. Ignores statuses, reactions, and non-text message types."""
+    """Extract [(from_phone, text), ...] text and interactive message choices from a Meta webhook
+    payload. Ignores statuses, reactions, and non-interactive message types."""
     out: list[tuple[str, str]] = []
     for entry in payload.get("entry", []):
         for change in entry.get("changes", []):
             value = change.get("value", {})
             for msg in value.get("messages", []):
-                if msg.get("type") == "text":
-                    phone = msg.get("from", "")
+                phone = msg.get("from", "")
+                if not phone:
+                    continue
+                
+                msg_type = msg.get("type")
+                if msg_type == "text":
                     text = msg.get("text", {}).get("body", "")
-                    if phone and text:
+                    if text:
                         out.append((phone, text))
+                elif msg_type == "interactive":
+                    interactive = msg.get("interactive", {})
+                    int_type = interactive.get("type")
+                    if int_type == "button_reply":
+                        text = interactive.get("button_reply", {}).get("title", "")
+                        if not text:
+                            text = interactive.get("button_reply", {}).get("id", "")
+                        if text:
+                            out.append((phone, text))
+                    elif int_type == "list_reply":
+                        text = interactive.get("list_reply", {}).get("title", "")
+                        if not text:
+                            text = interactive.get("list_reply", {}).get("id", "")
+                        if text:
+                            out.append((phone, text))
     return out

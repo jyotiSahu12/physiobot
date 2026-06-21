@@ -43,3 +43,43 @@ def test_parse_incoming_text():
 def test_parse_incoming_ignores_status():
     payload = {"entry": [{"changes": [{"value": {"statuses": [{"id": "x"}]}}]}]}
     assert webhook.parse_incoming(payload) == []
+
+
+def test_parse_incoming_interactive():
+    # Test button reply
+    payload_btn = {
+        "entry": [{
+            "changes": [{
+                "value": {"messages": [
+                    {
+                        "type": "interactive",
+                        "from": "9199",
+                        "interactive": {
+                            "type": "button_reply",
+                            "button_reply": {"id": "home_visit", "title": "Home Visit"}
+                        }
+                    }
+                ]}
+            }]
+        }]
+    }
+    assert webhook.parse_incoming(payload_btn) == [("9199", "Home Visit")]
+
+    # Test list reply
+    payload_list = {
+        "entry": [{
+            "changes": [{
+                "value": {"messages": [
+                    {
+                        "type": "interactive",
+                        "from": "9199",
+                        "interactive": {
+                            "type": "list_reply",
+                            "list_reply": {"id": "neck", "title": "Neck"}
+                        }
+                    }
+                ]}
+            }]
+        }]
+    }
+    assert webhook.parse_incoming(payload_list) == [("9199", "Neck")]

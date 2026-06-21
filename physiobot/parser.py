@@ -54,14 +54,13 @@ class Parser:
         triage_cfg = self.metadata.get("triage_and_safety", {})
         red_flags_list = triage_cfg.get("red_flags_requiring_urgent_medical_referral", [])
 
-        pain_area_options = []
-        pain_duration_options = []
-        intake_questions = self.metadata.get("customer_intake", {}).get("clinical_intake_questions", [])
-        for q in intake_questions:
-            if q["field"] == "pain_area":
-                pain_area_options = q.get("options", [])
-            elif q["field"] == "pain_duration":
-                pain_duration_options = q.get("options", [])
+        pain_area_options = [
+            "neck", "shoulder", "upper back", "lower back", "knee", "ankle",
+            "hip", "elbow", "wrist", "hand", "general weakness", "post-surgery rehab", "sports injury"
+        ]
+        pain_duration_options = [
+            "less than 24 hours", "1-3 days", "4-7 days", "1-4 weeks", "1-3 months", "more than 3 months"
+        ]
 
         system_prompt = (
             "You are an NLU parser for a physiotherapy clinic bot. "
@@ -174,15 +173,38 @@ class Parser:
                 slots["preferred_service_mode"] = "tele_consultation"
 
             # Pain area
-            for area in pain_area_options:
-                if area in lower_msg:
-                    slots["pain_area"] = area
+            area_mapping = {
+                "neck": ["neck"],
+                "shoulder": ["shoulder"],
+                "upper back": ["upper back"],
+                "lower back": ["lower back", "back"],
+                "knee": ["knee"],
+                "ankle": ["ankle", "foot"],
+                "hip": ["hip"],
+                "elbow": ["elbow"],
+                "wrist": ["wrist"],
+                "hand": ["hand"],
+                "general weakness": ["weakness", "general weakness"],
+                "post-surgery rehab": ["post-surgery", "surgery", "rehab"],
+                "sports injury": ["sports", "injury"]
+            }
+            for area_id, keywords in area_mapping.items():
+                if any(kw in lower_msg for kw in keywords):
+                    slots["pain_area"] = area_id
                     break
 
             # Pain duration
-            for dur in pain_duration_options:
-                if dur in lower_msg:
-                    slots["pain_duration"] = dur
+            duration_mapping = {
+                "less than 24 hours": ["24 hours", "24 hrs", "one day", "1 day", "less than 24"],
+                "1-3 days": ["1-3 days", "1 to 3 days", "2 days", "3 days"],
+                "4-7 days": ["4-7 days", "4 to 7 days", "4 days", "5 days", "6 days", "7 days", "a week", "1 week"],
+                "1-4 weeks": ["1-4 weeks", "1 to 4 weeks", "2 weeks", "3 weeks", "4 weeks", "couple of weeks"],
+                "1-3 months": ["1-3 months", "1 to 3 months", "a month", "1 month", "2 months", "3 months"],
+                "more than 3 months": ["more than 3 months", "3+ months", "chronic", "years", "months"]
+            }
+            for dur_id, keywords in duration_mapping.items():
+                if any(kw in lower_msg for kw in keywords):
+                    slots["pain_duration"] = dur_id
                     break
 
             # Red flags scan
