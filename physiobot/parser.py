@@ -146,10 +146,19 @@ class Parser:
             if phone_match:
                 slots["phone_number"] = phone_match.group(1)
 
-            # Name (e.g. "my name is Asha" or "i am Asha")
+            # Name (e.g. "my name is Asha" or "i am Asha" or just "Asha")
             name_match = re.search(r"(?:my name is|i am)\s+([a-zA-Z]+)", lower_msg)
             if name_match:
                 slots["full_name"] = name_match.group(1).title()
+            else:
+                # Fallback: clean out the phone number and punctuation, use remaining alpha words
+                cleaned_name = user_msg
+                if phone_match:
+                    cleaned_name = cleaned_name.replace(phone_match.group(1), "")
+                cleaned_name = re.sub(r"[^\w\s]", "", cleaned_name).strip()
+                words = [w for w in cleaned_name.split() if w.isalpha()]
+                if words and not any(w.lower() in ["hi", "hello", "book", "appointment", "yes", "no"] for w in words):
+                    slots["full_name"] = " ".join(words).title()
 
             # Pain score (integer 0 to 10)
             score_match = re.search(r"\b([0-9]|10)\b", lower_msg)
