@@ -31,32 +31,63 @@ class Orchestrator:
         self.state_machine = state_machine or StateMachine(self.config, self.store.db_path)
         self.outbound = outbound or Outbound(self.config)
 
-    def handle_message(self, phone: str, text: str) -> str:
+    def handle_message(
+        self,
+        phone: str,
+        text: str,
+        interactive_id: str | None = None,
+        profile_name: str | None = None,
+    ) -> str:
         """Process one inbound message and send the template reply.
-        Returns the formatted template text (useful for tests / local simulation)."""
-        self.store.touch_session(phone)
-        self.store.add_message(phone, "user", text)
-        
+        Returns the formatted template text (useful for tests / local simulation).
+
+        This runs as a FastAPI BackgroundTask, whose exceptions are logged but
+        otherwise swallowed — if anything here raises uncaught, the patient gets
+        no reply at all and we'd never know. So the entire turn, including the
+        initial DB writes, is wrapped: any failure still results in a fallback
+        message being sent, and a failure persisting that fallback never prevents
+        it from being returned/sent."""
+        reply = FALLBACK
         try:
-            # Get recent history to parse the intent/slots contextually
-            history = self.store.history(phone)
-            parsed = self.parser.parse_message(history)
-            
+            self.store.touch_session(phone)
+            self.store.add_message(phone, "user", text)
+
+            if interactive_id is not None:
+                # Button/list replies carry an unambiguous option id — skip NLU
+                # entirely so the LLM/regex parser can't misread it (e.g. "1-3 days"
+                # as a pain score) and silently fill the wrong slot.
+                intent, slots, red_flags = "interactive_reply", {}, []
+            else:
+                history = self.store.history(phone)
+                parsed = self.parser.parse_message(history)
+                intent = parsed["intent"]
+                slots = parsed.get("slots", {})
+                red_flags = parsed.get("red_flags_detected", [])
+
             # Transition state and select template
             template_key, template_params = self.state_machine.process_turn(
                 phone,
-                parsed["intent"],
-                parsed.get("slots", {}),
-                parsed.get("red_flags_detected", []),
+                intent,
+                slots,
+                red_flags,
+                interactive_id=interactive_id,
+                profile_name=profile_name,
             )
-            
+
             # Send template message
             reply = self.outbound.send_template(phone, template_key, **template_params)
-            
+
         except Exception:
             log.exception("orchestrator turn processing failed for %s", phone)
             reply = FALLBACK
-            self.outbound.send_text(phone, reply)
+            try:
+                self.outbound.send_text(phone, reply)
+            except Exception:
+                log.exception("failed to send fallback text to %s", phone)
 
-        self.store.add_message(phone, "assistant", reply)
+        try:
+            self.store.add_message(phone, "assistant", reply)
+        except Exception:
+            log.exception("failed to persist assistant reply for %s", phone)
+
         return reply

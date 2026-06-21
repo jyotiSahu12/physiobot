@@ -1,103 +1,200 @@
 {
-  "schema_version": "2.0.0",
-  "data_last_reviewed": "2026-06-21",
-  "business_context": {
-    "brand_name": "Balance Plus",
-    "clinic_display_name": "Balance Plus Physiotherapy Clinic - HSR Layout",
-    "branch_focus": "Sector 7, HSR Layout",
-    "clinic_category": "Physiotherapy, rehabilitation, clinical fitness and wellness clinic",
-    "country": "India",
-    "state": "Karnataka",
-    "city": "Bengaluru",
-    "primary_bot_goal": "Help customers understand services, choose the right consultation type, share necessary information, and book a consultation for the Sector 7 HSR Layout branch.",
-    "bot_should_prioritize_branch": "HSR Layout",
-    "bot_should_not_default_to_other_branches": true
-  },
-  "source_quality": {
-    "primary_source": {
-      "name": "Official BalancePlus website",
-      "url": "https://balanceplus.in/",
-      "confidence": "high",
-      "used_for": [
-        "brand name",
-        "core services",
-        "branch list",
-        "HSR branch locality",
-        "phone number",
-        "email",
-        "consultation modes",
-        "service categories",
-        "team names",
-        "privacy policy",
-        "appointment form fields"
-      ]
+  "schema_version": "3.0.0",
+  "dataset_name": "balanceplus_hsr_layout_branch_bot_knowledge_base",
+  "data_last_verified_from_official_website": "2026-06-21",
+  "production_status": "production_candidate_requires_clinic_validation_for_needs_confirmation_fields",
+  "source_policy": {
+    "principle": "Use only official BalancePlus website facts as customer-facing truth.",
+    "third_party_listing_data_allowed_in_customer_responses": false,
+    "customer_facing_claim_policy": {
+      "official_website_confirmed": "Bot may state this confidently.",
+      "needs_confirmation": "Bot must not state this as fact. Bot should collect user preference and route to clinic team.",
+      "internal_safety_guardrail": "Bot may use for safe routing, but must not present it as a BalancePlus-specific medical policy unless clinic confirms.",
+      "not_listed_on_website": "Bot must not claim availability."
     },
-    "secondary_sources": [
+    "strict_no_hallucination_rules": [
+      "Do not quote consultation fees because official website does not list HSR pricing.",
+      "Do not quote operating hours because official website does not list HSR timings.",
+      "Do not provide exact HSR street address beyond official website locality unless clinic confirms.",
+      "Do not promise a specific therapist for HSR because website does not map therapists to branches.",
+      "Do not claim same-day appointment confirmation unless backend confirms slot availability.",
+      "Do not claim home-visit radius, charges or therapist availability unless clinic confirms.",
+      "Do not add physiotherapy services not listed on the official website unless clinic confirms them separately.",
+      "Do not diagnose, prescribe, guarantee cure or provide emergency medical advice."
+    ]
+  },
+  "source_register": {
+    "official_sources": [
       {
-        "name": "Practo",
-        "confidence": "medium",
+        "source_id": "official_home",
+        "source_name": "BalancePlus Home Page",
+        "url": "https://balanceplus.in/",
         "used_for": [
-          "HSR detailed address",
-          "candidate operating hours",
-          "candidate consultation fee",
-          "doctor qualification and experience",
-          "ratings and patient stories"
+          "brand profile",
+          "established year",
+          "team size",
+          "mission-style positioning",
+          "main services",
+          "treatment technologies",
+          "team names",
+          "virtual consultation availability"
         ],
-        "bot_usage_rule": "Use only if clinic confirms or when explicitly labelled as third-party listing data."
+        "confidence": "high"
       },
       {
-        "name": "Justdial",
-        "confidence": "medium",
+        "source_id": "official_contact",
+        "source_name": "BalancePlus Contact Page",
+        "url": "https://balanceplus.in/contact/",
         "used_for": [
-          "HSR address landmark",
-          "ratings",
-          "doctor names",
-          "candidate operating hours",
-          "service tags"
+          "clinic, virtual and at-home consultation availability",
+          "phone number",
+          "email",
+          "contact form fields",
+          "branch preference options",
+          "issue options"
         ],
-        "bot_usage_rule": "Use only if clinic confirms or when explicitly labelled as third-party listing data."
+        "confidence": "high"
+      },
+      {
+        "source_id": "official_book_appointment",
+        "source_name": "BalancePlus Book Appointment Page",
+        "url": "https://balanceplus.in/book-appointment/",
+        "used_for": [
+          "appointment form fields",
+          "branch options",
+          "home visit option"
+        ],
+        "confidence": "high"
+      },
+      {
+        "source_id": "official_branches",
+        "source_name": "BalancePlus Our Branches Page",
+        "url": "https://balanceplus.in/our-branches/",
+        "used_for": [
+          "HSR branch official locality",
+          "HSR branch phone",
+          "HSR branch email",
+          "other branch reference data"
+        ],
+        "confidence": "high"
+      },
+      {
+        "source_id": "official_physiotherapy_services",
+        "source_name": "BalancePlus Physiotherapy Services Page",
+        "url": "https://balanceplus.in/physiotherapy-services/",
+        "used_for": [
+          "physiotherapy description",
+          "lower back pain, neck pain and shoulder pain focus",
+          "neuro rehabilitation",
+          "post-operative physiotherapy",
+          "vestibular rehabilitation",
+          "acupuncture",
+          "geriatric rehabilitation",
+          "pain management"
+        ],
+        "confidence": "high"
+      },
+      {
+        "source_id": "official_clinical_fitness",
+        "source_name": "BalancePlus Clinical Fitness Page",
+        "url": "https://balanceplus.in/clinical-fitness/",
+        "used_for": [
+          "clinical fitness positioning",
+          "weight loss",
+          "weight gain",
+          "strength and conditioning",
+          "endurance training",
+          "sports and training",
+          "senior citizen fitness training"
+        ],
+        "confidence": "high"
+      },
+      {
+        "source_id": "official_diet_nutrition",
+        "source_name": "BalancePlus Diet and Nutrition Page",
+        "url": "https://balanceplus.in/diet-and-nutrition/",
+        "used_for": [
+          "diet and nutrition positioning",
+          "personalised diet plans",
+          "nutrition advice",
+          "athlete meal plans",
+          "pregnant and lactating mothers",
+          "kids and adolescents",
+          "elderly diet",
+          "diabetes",
+          "high cholesterol"
+        ],
+        "confidence": "high"
+      },
+      {
+        "source_id": "official_fall_prevention",
+        "source_name": "BalancePlus Fall Prevention Program Page",
+        "url": "https://balanceplus.in/fall-prevention-program/",
+        "used_for": [
+          "senior citizen fall prevention program",
+          "one-to-one online training",
+          "thorough assessment",
+          "qualified physiotherapist coaching",
+          "personalized exercises",
+          "personalized treatment plan",
+          "personalized diet plan"
+        ],
+        "confidence": "high"
       }
     ],
-    "known_data_gaps": [
-      "Official website does not clearly list HSR branch exact street address beyond Sector 7, HSR Layout.",
-      "Official website does not clearly list HSR branch operating hours.",
-      "Official website does not list confirmed HSR branch pricing.",
-      "Official website does not map each therapist to each branch.",
-      "Official website does not provide cancellation, refund or package policies.",
-      "Official website does not provide GST, registration or insurance details."
+    "excluded_sources": [
+      {
+        "source_type": "third_party_listing",
+        "examples": [
+          "Practo",
+          "Justdial",
+          "Google listings"
+        ],
+        "status": "excluded_from_customer_facing_truth",
+        "reason": "Production bot should not rely on non-official data unless BalancePlus explicitly validates it."
+      }
     ]
   },
   "clinic_profile": {
     "brand_name": "Balance Plus",
-    "short_description": "Balance Plus is a Bengaluru-based physiotherapy clinic offering physiotherapy, clinical fitness, diet and nutrition, fall-prevention programs, virtual consultations and at-home consultations.",
-    "established_year": 2018,
-    "team_summary_from_website": "5 member team of expert physiotherapists",
-    "mission_from_website": "To make physiotherapy, nutrition consultations and diet planning accessible at home, office or clinic.",
-    "mission_for_bot": "Assess, analyse and alleviate customer pain or movement issues through appropriate physiotherapy guidance and consultation booking.",
-    "positioning": [
-      "pain relief",
-      "rehabilitation",
-      "personalized physiotherapy",
-      "clinical fitness",
-      "diet and nutrition",
-      "senior citizen fall prevention",
-      "virtual consultation",
-      "home consultation"
+    "official_display_name": "Balance Plus",
+    "clinic_category": "Physiotherapy clinic",
+    "country": "India",
+    "state": "Karnataka",
+    "city": "Bengaluru",
+    "established_year": {
+      "value": 2018,
+      "source_confidence": "official_website_confirmed"
+    },
+    "team_size": {
+      "value": "5 member team of expert physiotherapists",
+      "source_confidence": "official_website_confirmed"
+    },
+    "brand_positioning": {
+      "website_positioning": [
+        "Physiotherapy",
+        "Clinical Fitness",
+        "Diet and Nutrition",
+        "Fall prevention Program",
+        "Virtual Consultation",
+        "At-home consultations",
+        "Clinic consultations"
+      ],
+      "source_confidence": "official_website_confirmed"
+    },
+    "mission_style_lines_for_bot_internal_use": [
+      "Assess. Analyse. Alleviate.",
+      "Lead pain-free life.",
+      "Therapy with trust and care."
     ],
-    "brand_tone": [
-      "trustworthy",
-      "caring",
-      "professional",
-      "reassuring",
-      "clear",
-      "non-diagnostic"
-    ]
+    "customer_facing_short_description": "Balance Plus is a Bengaluru-based physiotherapy clinic offering physiotherapy services, clinical fitness, diet and nutrition support, fall-prevention programs, clinic consultations, virtual consultations and at-home consultations.",
+    "customer_facing_disclaimer": "The bot can help with service selection and appointment requests, but it cannot diagnose medical conditions or guarantee treatment outcomes."
   },
-  "hsr_branch": {
-    "branch_id": "balanceplus_hsr_sector_7",
-    "branch_name": "Balance Plus Physiotherapy Clinic - HSR Layout",
-    "branch_type": "physiotherapy_clinic",
-    "primary_branch_for_bot": true,
+  "primary_branch": {
+    "branch_id": "balanceplus_hsr_layout_sector_7",
+    "branch_name": "Balance Plus - HSR Layout",
+    "branch_priority_for_bot": 1,
+    "branch_focus_for_this_bot": true,
     "official_address": {
       "line_1": "Sector 7",
       "area": "HSR Layout",
@@ -105,243 +202,281 @@
       "state": "Karnataka",
       "pincode": "560102",
       "country": "India",
-      "confidence": "high"
+      "full_address_customer_facing": "Sector 7, HSR Layout, Bengaluru, Karnataka 560102",
+      "source_confidence": "official_website_confirmed"
     },
-    "third_party_address_candidates": [
-      {
-        "source": "Practo",
-        "address": "Number - 547, Sadashiva Nilaya, 23rd Cross, 14th Main Road, Sector 7, HSR Layout, Bengaluru",
-        "confidence": "medium",
-        "needs_clinic_confirmation": true
-      },
-      {
-        "source": "Justdial",
-        "address": "No. 547, Near Golden Arch Play School, HSR Layout, Bengaluru - 560102, Karnataka",
-        "confidence": "medium",
-        "needs_clinic_confirmation": true
-      }
-    ],
-    "map_details": {
-      "official_map_link_available": true,
-      "google_maps_place_name_from_redirect": "Balance Plus Physiotherapy(Home Care)",
-      "latitude_candidate": 12.9116303,
-      "longitude_candidate": 77.6301116,
-      "confidence": "medium",
-      "needs_clinic_confirmation": true
+    "exact_street_address": {
+      "value": null,
+      "status": "needs_confirmation",
+      "customer_facing_rule": "Do not provide a more specific street address than the official website unless clinic confirms."
     },
     "contact": {
-      "primary_phone": "+91 7411692516",
-      "phone_display_variants": [
-        "07411692516",
-        "+91 74116 92516",
-        "+91 7411692516"
-      ],
-      "email": "balanceplusinfo@gmail.com",
-      "whatsapp": {
-        "number": "+91 7411692516",
-        "available": "needs_confirmation"
+      "phone": {
+        "value": "+91 7411692516",
+        "display_value": "+91 74116 92516",
+        "source_confidence": "official_website_confirmed"
       },
-      "website": "https://balanceplus.in/",
-      "book_appointment_url": "https://balanceplus.in/book-appointment",
-      "contact_url": "https://balanceplus.in/contact/",
-      "pay_online_available": true
+      "email": {
+        "value": "balanceplusinfo@gmail.com",
+        "source_confidence": "official_website_confirmed"
+      },
+      "whatsapp": {
+        "value": null,
+        "status": "needs_confirmation",
+        "customer_facing_rule": "Do not say WhatsApp is available unless clinic confirms."
+      },
+      "website": {
+        "value": "https://balanceplus.in/",
+        "source_confidence": "official_website_confirmed"
+      },
+      "book_appointment_page": {
+        "value": "https://balanceplus.in/book-appointment/",
+        "source_confidence": "official_website_confirmed"
+      },
+      "contact_page": {
+        "value": "https://balanceplus.in/contact/",
+        "source_confidence": "official_website_confirmed"
+      }
     },
     "operating_hours": {
-      "official_website_hours": null,
+      "value": null,
       "status": "needs_confirmation",
-      "candidate_hours_from_practo": {
-        "monday": "11:00-21:00",
-        "tuesday": "11:00-21:00",
-        "wednesday": "11:00-21:00",
-        "thursday": "11:00-21:00",
-        "friday": "11:00-21:00",
-        "saturday": "11:00-21:00",
-        "sunday": "11:00-21:00",
-        "confidence": "medium"
-      },
-      "candidate_hours_from_justdial": {
-        "monday": "08:00-22:30",
-        "tuesday": "08:00-22:00",
-        "wednesday": "08:00-22:00",
-        "thursday": "08:00-22:00",
-        "friday": "08:00-22:00",
-        "saturday": "08:00-22:00",
-        "sunday": "11:30-16:00",
-        "confidence": "medium"
-      },
-      "bot_rule": "Do not confidently claim working hours until clinic confirms. For booking, collect preferred date and time, then say the clinic team will confirm slot availability."
+      "customer_facing_response": "The official website does not list confirmed timings for the HSR Layout branch. Please share your preferred date and time, and the clinic team will confirm availability."
     },
-    "available_consultation_modes": {
-      "clinic_visit": {
-        "available": true,
-        "confidence": "high",
-        "best_for": [
-          "first assessment",
-          "hands-on physiotherapy",
-          "manual therapy",
-          "electrotherapy",
-          "traction therapy",
-          "sports injury rehab",
-          "post-operative rehab",
-          "persistent pain"
-        ]
+    "pricing": {
+      "consultation_fee": null,
+      "package_pricing": null,
+      "home_visit_charges": null,
+      "virtual_consultation_fee": null,
+      "status": "needs_confirmation",
+      "customer_facing_response": "The official website does not list confirmed pricing for the HSR Layout branch. Please share the consultation type you need, and the clinic team will confirm the fee."
+    },
+    "facilities": {
+      "parking": {
+        "value": null,
+        "status": "needs_confirmation"
       },
-      "home_visit": {
-        "available": true,
-        "confidence": "high",
-        "best_for": [
-          "elderly patients",
-          "patients unable to travel",
-          "post-surgery mobility limitation",
-          "severe movement restriction",
-          "home-based rehab needs"
-        ],
-        "service_radius": "needs_confirmation",
-        "travel_charges": "needs_confirmation"
+      "wheelchair_accessibility": {
+        "value": null,
+        "status": "needs_confirmation"
       },
-      "virtual_consultation": {
-        "available": true,
-        "confidence": "high",
-        "best_for": [
-          "exercise guidance",
-          "posture guidance",
-          "follow-up review",
-          "mild pain without red flags",
-          "diet and fitness counselling",
-          "fall prevention coaching"
-        ],
-        "not_recommended_for": [
-          "severe acute pain",
-          "suspected fracture",
-          "post-surgery complication",
-          "new neurological symptoms",
-          "cases needing hands-on examination"
-        ]
+      "lift_access": {
+        "value": null,
+        "status": "needs_confirmation"
+      },
+      "private_treatment_rooms": {
+        "value": null,
+        "status": "needs_confirmation"
+      },
+      "digital_payment_at_clinic": {
+        "value": null,
+        "status": "needs_confirmation"
+      },
+      "pay_online_link_present_on_website": {
+        "value": true,
+        "source_confidence": "official_website_confirmed",
+        "customer_facing_rule": "Bot may say the website has a Pay Online option, but must not describe payment workflow unless clinic confirms."
       }
     }
   },
-  "other_branches_for_reference_only": [
-    {
-      "branch_name": "Koramangala / Ejipura",
-      "address": "7/22, NMR Enclave, Ejipura Main Road, Near Ejipura Signal, Koramangala, Bengaluru, Karnataka 560047",
-      "phone": "+91 7411692516",
-      "email": "balanceplusinfo@gmail.com"
+  "consultation_modes": {
+    "clinic_visit": {
+      "available": true,
+      "source_confidence": "official_website_confirmed",
+      "customer_facing_text": "You can request a clinic consultation at Balance Plus HSR Layout.",
+      "best_for_bot_guidance": [
+        "first-time physiotherapy assessment",
+        "pain assessment",
+        "hands-on treatment discussion",
+        "treatment technologies listed by clinic",
+        "cases where physical examination may be needed"
+      ],
+      "bot_must_not_claim": [
+        "confirmed slot without backend confirmation",
+        "specific therapist availability",
+        "exact duration",
+        "exact price",
+        "guaranteed recovery"
+      ]
     },
-    {
-      "branch_name": "Domlur",
-      "address": "383, 1st Floor, 2nd Main Road, Domlur, Bengaluru, Karnataka 560071",
-      "phone": "+91 7411692516",
-      "email": "balanceplusinfo@gmail.com"
+    "virtual_consultation": {
+      "available": true,
+      "source_confidence": "official_website_confirmed",
+      "customer_facing_text": "Balance Plus offers video consultations as an alternative to a face-to-face appointment.",
+      "best_for_bot_guidance": [
+        "initial guidance",
+        "follow-up discussion",
+        "clinical fitness guidance",
+        "diet and nutrition consultation",
+        "fall-prevention online training",
+        "mild concerns without red flags"
+      ],
+      "bot_must_not_claim": [
+        "virtual consultation is suitable for every condition",
+        "virtual consultation can replace emergency care",
+        "virtual consultation can diagnose serious symptoms"
+      ]
     },
-    {
-      "branch_name": "Brookefield",
-      "address": "Vijayalakshmi Square, 521/522, ITPL Main Road, inside Brookefield Hospital, Kundalahalli, Brookefield, Bengaluru, Karnataka 560037",
-      "phone": "+91 7411692516",
-      "email": "balanceplusinfo@gmail.com"
+    "home_visit": {
+      "available": true,
+      "source_confidence": "official_website_confirmed",
+      "customer_facing_text": "Balance Plus offers at-home consultations. Please share your area and preferred time so the clinic team can confirm availability.",
+      "best_for_bot_guidance": [
+        "patients who cannot travel",
+        "elderly patients",
+        "mobility-limited patients",
+        "post-operative customers after clearance",
+        "home-based physiotherapy requests"
+      ],
+      "coverage_area": {
+        "value": null,
+        "status": "needs_confirmation"
+      },
+      "travel_charges": {
+        "value": null,
+        "status": "needs_confirmation"
+      },
+      "bot_must_not_claim": [
+        "exact service radius",
+        "same-day home visit guarantee",
+        "fixed home-visit fee",
+        "specific therapist availability"
+      ]
     }
-  ],
+  },
   "official_service_catalog": [
     {
       "service_id": "physiotherapy_services",
       "service_name": "Physiotherapy Services",
-      "service_category": "Physiotherapy and Pain Management",
+      "service_category": "Physiotherapy",
       "officially_listed": true,
-      "description": "Professional physiotherapy services for pain management, including lower back pain, neck pain and shoulder pain.",
-      "customer_goal": [
-        "reduce pain",
-        "improve mobility",
-        "recover function",
-        "return to daily activities",
-        "avoid future recurrence"
+      "source_confidence": "official_website_confirmed",
+      "website_description_summary": "Balance Plus provides physiotherapy services for pain management, including lower back pain, neck pain and shoulder pain in Bengaluru.",
+      "customer_facing_description": "Physiotherapy services can be requested for pain, movement issues and rehabilitation needs such as lower back pain, neck pain and shoulder pain.",
+      "website_listed_focus_areas": [
+        "lower back pain",
+        "neck pain",
+        "shoulder pain",
+        "pain management"
       ],
       "sub_services": [
         {
+          "sub_service_id": "neuro_rehabilitation",
           "name": "Neuro Rehabilitation",
-          "description": "Rehabilitation for nervous system injuries or disorders, focused on movement and functional improvement.",
-          "good_for": [
-            "stroke recovery",
-            "paralysis rehab",
-            "balance issues",
+          "officially_listed": true,
+          "source_confidence": "official_website_confirmed",
+          "customer_facing_description": "Rehabilitation support for people recovering from nervous system injuries or disorders, focused on improving movement and quality of life.",
+          "bot_routing_tags": [
+            "stroke",
+            "paralysis",
+            "nerve issue",
             "neurological weakness",
-            "movement impairment"
+            "movement impairment",
+            "balance difficulty"
           ],
-          "requires_doctor_clearance": "case_dependent"
+          "requires_human_review": true
         },
         {
-          "name": "Post-operative Physiotherapy",
-          "description": "Recovery support after surgery with exercises and treatment to regain strength, mobility and function.",
-          "good_for": [
-            "post-surgery stiffness",
-            "post-fracture rehab",
-            "knee surgery rehab",
-            "shoulder surgery rehab",
-            "spine surgery rehab"
+          "sub_service_id": "post_operative_physiotherapy",
+          "name": "Post-operative physiotherapy",
+          "officially_listed": true,
+          "source_confidence": "official_website_confirmed",
+          "customer_facing_description": "Physiotherapy support after surgery to regain strength, mobility and function.",
+          "bot_routing_tags": [
+            "after surgery",
+            "post surgery",
+            "operation",
+            "ACL",
+            "knee replacement",
+            "fracture surgery",
+            "shoulder surgery",
+            "spine surgery"
           ],
-          "requires_doctor_clearance": true,
-          "documents_recommended": [
-            "doctor prescription",
-            "discharge summary",
-            "surgery notes",
-            "imaging reports",
-            "post-operative protocol"
+          "recommended_documents_to_ask": [
+            "doctor prescription if available",
+            "discharge summary if available",
+            "surgery date",
+            "post-operative protocol if available"
+          ],
+          "requires_human_review": true
+        },
+        {
+          "sub_service_id": "vestibular_rehabilitation",
+          "name": "Vestibular rehabilitation",
+          "officially_listed": true,
+          "source_confidence": "official_website_confirmed",
+          "customer_facing_description": "Rehabilitation for balance problems and dizziness related to inner-ear or vestibular issues.",
+          "bot_routing_tags": [
+            "dizziness",
+            "vertigo",
+            "balance problem",
+            "unsteady walking"
+          ],
+          "requires_human_review": true
+        },
+        {
+          "sub_service_id": "acupuncture",
+          "name": "Acupuncture",
+          "officially_listed": true,
+          "source_confidence": "official_website_confirmed",
+          "customer_facing_description": "Acupuncture is listed by Balance Plus as a therapy involving thin needles at specific body points to relieve pain and promote well-being.",
+          "bot_routing_tags": [
+            "acupuncture",
+            "needle therapy",
+            "pain relief"
+          ],
+          "requires_consent": true,
+          "requires_human_review": true,
+          "bot_must_not_claim": [
+            "guaranteed cure",
+            "suitable for everyone",
+            "no risks"
           ]
         },
         {
-          "name": "Vestibular Rehabilitation",
-          "description": "Exercises and techniques for balance issues and dizziness related to vestibular or inner-ear problems.",
-          "good_for": [
-            "dizziness",
-            "vertigo-like symptoms",
-            "balance problems",
-            "unsteadiness while walking"
-          ],
-          "requires_doctor_clearance": "case_dependent"
-        },
-        {
-          "name": "Acupuncture",
-          "description": "Needle-based pain relief and wellness modality listed by the clinic.",
-          "good_for": [
-            "pain management",
-            "muscle tightness",
-            "selected chronic pain cases"
-          ],
-          "requires_consent": true,
-          "bot_rule": "Explain as a therapy option only; do not claim guaranteed cure."
-        },
-        {
-          "name": "Geriatric Rehabilitation",
-          "description": "Rehabilitation for older adults focused on mobility, strength and independence.",
-          "good_for": [
-            "elderly mobility issues",
-            "weakness",
+          "sub_service_id": "geriatric_rehabilitation",
+          "name": "Geriatric rehabilitation",
+          "officially_listed": true,
+          "source_confidence": "official_website_confirmed",
+          "customer_facing_description": "Rehabilitation for older adults focused on improving mobility, strength, independence and quality of life.",
+          "bot_routing_tags": [
+            "elderly",
+            "senior citizen",
+            "old age weakness",
             "walking difficulty",
-            "fall risk",
-            "post-hospitalization weakness"
+            "mobility issue"
           ],
-          "home_visit_suitable": true
+          "requires_human_review": false
         },
         {
+          "sub_service_id": "pain_management",
           "name": "Pain Management",
-          "description": "Pain relief and functional improvement using physiotherapy, therapy techniques and lifestyle guidance.",
-          "good_for": [
+          "officially_listed": true,
+          "source_confidence": "official_website_confirmed",
+          "customer_facing_description": "Pain management support focused on reducing discomfort and improving quality of life.",
+          "bot_routing_tags": [
+            "pain",
             "back pain",
             "neck pain",
             "shoulder pain",
             "joint pain",
-            "muscle spasm",
-            "recurrent pain"
-          ]
+            "muscle pain"
+          ],
+          "requires_human_review": false
         }
       ],
-      "bot_recommendation_logic": {
+      "bot_recommendation_rule": {
         "recommend_when": [
           "customer has pain",
-          "customer has stiffness",
-          "customer has injury",
-          "customer has post-surgery rehab need",
-          "customer is unsure which service to choose"
+          "customer has lower back pain",
+          "customer has neck pain",
+          "customer has shoulder pain",
+          "customer needs post-operative rehab",
+          "customer needs neurological rehab",
+          "customer reports dizziness or balance issue",
+          "customer is unsure which service to pick"
         ],
-        "default_for_first_time_customer": true
+        "default_for_first_time_pain_customers": true
       }
     },
     {
@@ -349,362 +484,517 @@
       "service_name": "Clinical Fitness",
       "service_category": "Fitness and Recovery",
       "officially_listed": true,
-      "description": "Tailor-made clinical fitness programs for recovery, fitness after injury, strength, conditioning and long-term health.",
-      "sub_services": [
-        "Weight loss",
-        "Weight gain",
-        "General strength and conditioning",
-        "Endurance training",
-        "Sports and training",
-        "Senior citizen fitness training"
+      "source_confidence": "official_website_confirmed",
+      "website_description_summary": "Balance Plus provides clinical fitness programs for recovery and fitness after injury with personalized plans.",
+      "customer_facing_description": "Clinical Fitness is suitable for customers looking for guided fitness, recovery after injury, safe strengthening or structured conditioning.",
+      "officially_listed_sub_services": [
+        {
+          "sub_service_id": "weight_loss",
+          "name": "Weight loss",
+          "bot_routing_tags": [
+            "weight loss",
+            "lose weight",
+            "fat loss"
+          ]
+        },
+        {
+          "sub_service_id": "weight_gain",
+          "name": "Weight gain",
+          "bot_routing_tags": [
+            "weight gain",
+            "gain weight",
+            "muscle gain"
+          ]
+        },
+        {
+          "sub_service_id": "general_strength_conditioning",
+          "name": "General strength and conditioning",
+          "bot_routing_tags": [
+            "strength",
+            "conditioning",
+            "fitness",
+            "muscle strength"
+          ]
+        },
+        {
+          "sub_service_id": "endurance_training",
+          "name": "Endurance training",
+          "bot_routing_tags": [
+            "stamina",
+            "endurance",
+            "running",
+            "cycling"
+          ]
+        },
+        {
+          "sub_service_id": "sports_training",
+          "name": "Sports and training",
+          "bot_routing_tags": [
+            "sports",
+            "training",
+            "athletic goal",
+            "return to sport"
+          ]
+        },
+        {
+          "sub_service_id": "senior_citizen_fitness_training",
+          "name": "Senior Citizen Fitness Training",
+          "bot_routing_tags": [
+            "senior fitness",
+            "elderly exercise",
+            "old age fitness"
+          ]
+        }
       ],
-      "good_for": [
-        "post-injury return to fitness",
-        "safe strengthening",
-        "muscle and joint conditioning",
-        "stamina improvement",
-        "sports readiness",
-        "elderly strength and mobility"
-      ],
-      "bot_recommendation_logic": {
+      "bot_recommendation_rule": {
         "recommend_when": [
-          "customer wants fitness but has injury history",
-          "customer wants safe weight loss or weight gain support",
-          "customer wants strength and conditioning",
-          "customer is elderly and wants safe fitness",
-          "customer is returning to activity after pain"
+          "customer asks for fitness guidance",
+          "customer wants recovery after injury",
+          "customer wants safe strengthening",
+          "customer wants weight loss or weight gain support",
+          "customer wants senior citizen fitness"
         ],
-        "avoid_when": [
+        "avoid_direct_recommendation_when": [
           "customer has severe acute pain",
-          "customer has suspected fracture",
           "customer has recent surgery without clearance",
-          "customer reports red flags"
+          "customer reports red-flag symptoms"
         ]
       }
     },
     {
       "service_id": "diet_and_nutrition",
       "service_name": "Diet and Nutrition",
-      "service_category": "Nutrition and Wellness",
+      "service_category": "Nutrition",
       "officially_listed": true,
-      "description": "Customized and personalized diet plans based on needs, eating habits, lifestyle and activity levels.",
-      "sub_services": [
-        "Customized meal plans for athletes",
-        "Nutrition for pregnant and lactating mothers",
-        "Nutrition for kids and adolescents",
-        "Diet for elderly care",
-        "Diabetes-focused nutrition guidance",
-        "High cholesterol-focused nutrition guidance",
-        "Weight loss diet planning",
-        "Weight gain diet planning"
+      "source_confidence": "official_website_confirmed",
+      "website_description_summary": "Balance Plus offers customised, tailored diet plans and nutrition advice based on needs, goals, eating habits, lifestyle and activity levels.",
+      "customer_facing_description": "Diet and Nutrition consultation can help with personalized diet planning, nutrition advice and goal-based meal guidance.",
+      "officially_listed_sub_services": [
+        {
+          "sub_service_id": "customized_meal_plans_for_athletes",
+          "name": "Customized meal plans for athletes",
+          "bot_routing_tags": [
+            "athlete diet",
+            "sports nutrition",
+            "meal plan for training"
+          ]
+        },
+        {
+          "sub_service_id": "pregnant_and_lactating_mothers",
+          "name": "For pregnant and lactating mothers",
+          "bot_routing_tags": [
+            "pregnancy diet",
+            "lactation diet",
+            "new mother diet"
+          ],
+          "requires_human_review": true
+        },
+        {
+          "sub_service_id": "kids_and_adolescents",
+          "name": "Kids and adolescents",
+          "bot_routing_tags": [
+            "child diet",
+            "teen nutrition",
+            "kids nutrition"
+          ],
+          "requires_guardian": true
+        },
+        {
+          "sub_service_id": "diet_for_elderly",
+          "name": "Diet for the elderly catering",
+          "bot_routing_tags": [
+            "elderly diet",
+            "senior nutrition",
+            "old age nutrition"
+          ]
+        },
+        {
+          "sub_service_id": "diabetes",
+          "name": "Diabetes",
+          "bot_routing_tags": [
+            "diabetes diet",
+            "blood sugar diet",
+            "diabetic meal plan"
+          ],
+          "requires_human_review": true,
+          "bot_must_not_claim": [
+            "diabetes treatment",
+            "medication replacement",
+            "blood sugar cure"
+          ]
+        },
+        {
+          "sub_service_id": "high_cholesterol",
+          "name": "High cholesterol",
+          "bot_routing_tags": [
+            "cholesterol diet",
+            "lipid diet",
+            "high cholesterol"
+          ],
+          "requires_human_review": true,
+          "bot_must_not_claim": [
+            "cholesterol cure",
+            "medication replacement"
+          ]
+        }
       ],
-      "good_for": [
-        "weight loss",
-        "weight gain",
-        "sports nutrition",
-        "healthier eating habits",
-        "diabetes diet support",
-        "cholesterol diet support",
-        "elderly nutrition",
-        "pregnancy or lactation nutrition support"
-      ],
-      "bot_recommendation_logic": {
+      "bot_recommendation_rule": {
         "recommend_when": [
           "customer asks for diet plan",
+          "customer asks for nutrition advice",
           "customer asks for weight loss",
-          "customer asks for weight gain",
-          "customer asks for diabetes or cholesterol diet",
-          "customer asks for athlete meal plan"
-        ],
-        "bot_safety_rule": "Do not prescribe disease-specific diet as medical treatment. Recommend consultation for personalized plan."
+          "customer asks for athlete meal plan",
+          "customer asks for pregnancy or lactation nutrition",
+          "customer asks for diabetes or high cholesterol diet support"
+        ]
       }
     },
     {
       "service_id": "fall_prevention_program",
-      "service_name": "Senior Citizen Fall Prevention Program",
-      "service_category": "Elderly Care and Balance Training",
+      "service_name": "Fall prevention Program",
+      "service_category": "Senior Citizen Care",
       "officially_listed": true,
-      "description": "Senior citizen fall-prevention program using assessment, one-to-one online training, physiotherapist coaching, personalized exercises, treatment plan and diet plan.",
-      "features": [
-        "thorough assessment",
+      "source_confidence": "official_website_confirmed",
+      "website_description_summary": "Balance Plus offers a Senior Citizen Fall Prevention Program with one-to-one online training, assessment, physiotherapist coaching, personalized exercises, treatment plan and diet plan.",
+      "customer_facing_description": "The Senior Citizen Fall Prevention Program is designed to help older adults improve balance, mobility, confidence and reduce fall risk.",
+      "officially_listed_features": [
         "one-to-one online training",
-        "qualified physiotherapist coaching",
-        "personalized exercises",
-        "balance muscle strengthening",
+        "thorough assessment",
+        "coaching by qualified physiotherapist",
+        "personalized exercises to strengthen balance muscles",
         "personalized treatment plan",
         "personalized diet plan"
       ],
-      "outcomes_targeted": [
+      "officially_listed_outcomes": [
         "regaining independence",
-        "reducing chances of falling",
+        "reducing the chances of falling",
         "restoring confidence",
-        "improving quality of life",
+        "improving the quality of life",
         "increasing agility",
         "improving mobility"
       ],
-      "good_for": [
-        "elderly fall risk",
-        "fear of falling",
-        "balance difficulty",
-        "walking instability",
-        "age-related weakness",
-        "post-fall confidence loss"
-      ],
-      "bot_recommendation_logic": {
+      "bot_recommendation_rule": {
         "recommend_when": [
-          "customer is senior citizen",
-          "customer has fallen recently",
-          "customer feels unsteady",
-          "family member is worried about elderly fall risk",
-          "customer wants home or online guided balance training"
+          "customer is a senior citizen",
+          "customer is asking for elderly fall prevention",
+          "customer reports fear of falling",
+          "customer reports balance difficulty",
+          "family member is asking for elderly mobility support"
         ],
-        "red_flag_escalation": [
-          "fall with head injury",
-          "fall with suspected fracture",
+        "requires_human_review_when": [
+          "recent fall with injury",
+          "head injury",
+          "suspected fracture",
           "loss of consciousness",
           "sudden weakness",
-          "new confusion",
-          "severe pain after fall"
+          "confusion after fall"
         ]
       }
     }
   ],
-  "treatment_modalities": {
-    "officially_listed_modalities": [
-      {
-        "name": "Therapeutic Ultrasound",
-        "category": "Electrotherapy / modality",
-        "bot_explanation": "A modality used by physiotherapists in selected cases for pain, tissue healing support or soft-tissue conditions.",
-        "bot_should_not_say": "Guaranteed cure"
-      },
-      {
-        "name": "Interferential Therapy",
-        "short_name": "IFT",
-        "category": "Electrotherapy",
-        "bot_explanation": "A physiotherapy modality used in selected pain-management cases.",
-        "bot_should_not_say": "Permanent pain removal in one session"
-      },
-      {
-        "name": "Acupuncture Treatment",
-        "category": "Needle-based therapy",
-        "bot_explanation": "A therapy option listed by the clinic, used in selected cases with consent.",
-        "requires_consent": true
-      },
-      {
-        "name": "Traction Therapy",
-        "category": "Spine-related physiotherapy modality",
-        "bot_explanation": "A treatment option listed by the clinic, generally considered after assessment for suitable spine-related cases.",
-        "requires_assessment_first": true
-      }
+  "official_treatment_technologies": [
+    {
+      "treatment_id": "therapeutic_ultrasound",
+      "name": "Therapeutic Ultrasound",
+      "officially_listed": true,
+      "source_confidence": "official_website_confirmed",
+      "customer_facing_rule": "Bot may mention this as a listed treatment technology, but should not claim suitability without assessment."
+    },
+    {
+      "treatment_id": "interferential_therapy",
+      "name": "Interferential Therapy",
+      "short_name": "IFT",
+      "officially_listed": true,
+      "source_confidence": "official_website_confirmed",
+      "customer_facing_rule": "Bot may mention this as a listed treatment technology, but should not claim suitability without assessment."
+    },
+    {
+      "treatment_id": "acupuncture_treatment",
+      "name": "Acupuncture Treatment",
+      "officially_listed": true,
+      "source_confidence": "official_website_confirmed",
+      "requires_consent": true,
+      "customer_facing_rule": "Bot may mention this as a listed treatment, but should route to therapist assessment."
+    },
+    {
+      "treatment_id": "traction_therapy",
+      "name": "Traction Therapy",
+      "officially_listed": true,
+      "source_confidence": "official_website_confirmed",
+      "customer_facing_rule": "Bot may mention this as a listed treatment technology, but should not claim it is appropriate without assessment."
+    }
+  ],
+  "services_not_confirmed_on_official_website": {
+    "bot_must_not_offer_as_balanceplus_services_unless_clinic_confirms": [
+      "women's health physiotherapy",
+      "pediatric physiotherapy",
+      "dry needling",
+      "cupping therapy",
+      "ergonomic consultation",
+      "dedicated sports injury rehabilitation package",
+      "manual therapy as a standalone listed service",
+      "electrotherapy as a standalone listed service",
+      "insurance reimbursement assistance",
+      "medical certificates",
+      "diagnostic imaging",
+      "doctor consultation",
+      "orthopedic surgeon consultation"
     ],
-    "third_party_listed_modalities_needing_confirmation": [
-      "Electrotherapy",
-      "Manual Therapy",
-      "Exercise Therapy",
-      "Core Training",
-      "Heat Therapy Treatment",
-      "Trauma Injury Physiotherapy / Rehab",
-      "Soft Tissue Injury Management",
-      "Spine Injury",
-      "Sports Injury Treatment/Management",
-      "Physiotherapy for Sports Injury Rehabilitation",
-      "Postural Training",
-      "Bandaging",
-      "Shoulder Injuries",
-      "Cervical / Lumbar Traction",
-      "Bare Foot Rehab",
-      "Osteopathic Treatment",
-      "Tape Stripping"
-    ]
+    "note": "Some of these may exist operationally, but they are not confirmed on the official website pages reviewed for this bot."
   },
-  "therapists": {
-    "official_team_listed_on_website": [
+  "team": {
+    "official_team_members_listed": [
       {
         "name": "Dr. Pramod Maurya (PT)",
         "role": "Consultant Physiotherapist",
-        "branch_mapping": "needs_confirmation",
-        "confidence": "high"
+        "source_confidence": "official_website_confirmed",
+        "hsr_branch_mapping": {
+          "value": null,
+          "status": "needs_confirmation"
+        }
       },
       {
         "name": "Dr. Monika (PT)",
         "role": "Consultant Physiotherapist",
-        "branch_mapping": "needs_confirmation",
-        "confidence": "high"
+        "source_confidence": "official_website_confirmed",
+        "hsr_branch_mapping": {
+          "value": null,
+          "status": "needs_confirmation"
+        }
       },
       {
         "name": "Dr. Ahamed Thenveer Ty",
         "role": "Physiotherapist",
-        "branch_mapping": "needs_confirmation",
-        "confidence": "high"
+        "source_confidence": "official_website_confirmed",
+        "hsr_branch_mapping": {
+          "value": null,
+          "status": "needs_confirmation"
+        }
       },
       {
-        "name": "Dr. Ajay Kumar (PT)",
+        "name": "Dr. Ajay kumar (PT)",
         "role": "Physiotherapy",
-        "branch_mapping": "needs_confirmation",
-        "confidence": "high"
+        "source_confidence": "official_website_confirmed",
+        "hsr_branch_mapping": {
+          "value": null,
+          "status": "needs_confirmation"
+        }
       }
     ],
-    "hsr_third_party_listed_therapists_needing_confirmation": [
-      {
-        "name": "Dr. Pramod Kumar Maurya",
-        "qualification": "BPTh/BPT",
-        "experience": "13 years overall",
-        "role": "Physiotherapist",
-        "consultation_fee_candidate_inr": 1000,
-        "source": "Practo",
-        "confidence": "medium",
-        "needs_clinic_confirmation": true
-      },
-      {
-        "name": "Ms. Haritha T V",
-        "qualification": "BPT",
-        "role": "Physiotherapist",
-        "source": "Justdial",
-        "confidence": "medium",
-        "needs_clinic_confirmation": true
-      },
-      {
-        "name": "Dr. Juhee Khandelwal",
-        "role": "Physiotherapist",
-        "source": "Practo search snippet",
-        "confidence": "low",
-        "needs_clinic_confirmation": true
-      }
-    ],
-    "bot_rule": "Do not promise a specific therapist unless the scheduling backend confirms availability."
+    "bot_customer_facing_rule": "The bot may mention the official team names if asked generally, but must not say a specific therapist is available at HSR Layout unless backend or clinic confirms.",
+    "specific_therapist_booking_rule": "Collect therapist preference if customer asks, then route to clinic team for confirmation."
   },
-  "pricing": {
-    "currency": "INR",
-    "official_website_pricing": null,
-    "status": "needs_confirmation",
-    "candidate_practo_consultation_fee": {
-      "amount_inr": 1000,
-      "applies_to": "clinic visit with Dr. Pramod Kumar Maurya according to Practo listing",
-      "confidence": "medium",
-      "needs_clinic_confirmation": true
+  "other_branches_reference": {
+    "bot_usage": "Reference only if customer asks about other branches. Do not redirect away from HSR by default.",
+    "branches": [
+      {
+        "branch_id": "balanceplus_koramangala_ejipura",
+        "branch_name": "Koramangala / Ejipura",
+        "official_address": "7/22, NMR enclave, Ejipura main Road, Near Ejipura signal, Koramangala, Bengaluru, Karnataka 560047",
+        "phone": "+91 7411692516",
+        "email": "balanceplusinfo@gmail.com",
+        "source_confidence": "official_website_confirmed"
+      },
+      {
+        "branch_id": "balanceplus_domlur",
+        "branch_name": "Domlur",
+        "official_address": "383, 1st Floor, 2nd Main Rd, Domlur, Bengaluru, Karnataka 560071",
+        "phone": "+91 7411692516",
+        "email": "balanceplusinfo@gmail.com",
+        "source_confidence": "official_website_confirmed"
+      },
+      {
+        "branch_id": "balanceplus_brookefield",
+        "branch_name": "Brookefield",
+        "official_address": "Vijayalakshmi Square, 521/522, ITPL Main Rd, inside Brookefield Hospital, Kundalahalli, Brookefield, Bengaluru, Karnataka 560037",
+        "phone": "+91 7411692516",
+        "email": "balanceplusinfo@gmail.com",
+        "source_confidence": "official_website_confirmed"
+      }
+    ]
+  },
+  "official_booking_and_contact_forms": {
+    "book_appointment_form": {
+      "source_confidence": "official_website_confirmed",
+      "fields_listed_on_website": [
+        {
+          "field": "name",
+          "label": "Name",
+          "required_for_bot": true
+        },
+        {
+          "field": "email",
+          "label": "Email",
+          "required_for_bot": false
+        },
+        {
+          "field": "phone_number",
+          "label": "Phone No",
+          "required_for_bot": true
+        },
+        {
+          "field": "clinic_selection",
+          "label": "Select the Clinic you'd like to visit",
+          "required_for_bot": true,
+          "official_options": [
+            "HSR Layout",
+            "Ejipura",
+            "Brookefield",
+            "Home Visit"
+          ],
+          "default_for_this_bot": "HSR Layout"
+        },
+        {
+          "field": "message",
+          "label": "Your Message",
+          "required_for_bot": true
+        }
+      ]
     },
-    "pricing_questions_bot_response": "The final consultation fee or package cost depends on consultation type, treatment need and clinic confirmation. I can collect your details and preferred slot so the HSR team can confirm the exact price.",
-    "payment_methods": {
-      "pay_online_available_on_website": true,
-      "upi": "needs_confirmation",
-      "cash": "needs_confirmation",
-      "card": "needs_confirmation",
-      "invoice_available": "needs_confirmation",
-      "insurance_or_reimbursement_support": "needs_confirmation"
-    },
-    "package_pricing": {
-      "available": "needs_confirmation",
-      "typical_package_types_to_configure": [
-        "single consultation",
-        "5-session physiotherapy package",
-        "10-session physiotherapy package",
-        "home-visit package",
-        "post-operative rehab package",
-        "fall-prevention package",
-        "clinical fitness package",
-        "diet consultation package"
+    "contact_page_consultation_form": {
+      "source_confidence": "official_website_confirmed",
+      "fields_listed_on_website": [
+        {
+          "field": "full_name",
+          "label": "Full Name",
+          "required_for_bot": true
+        },
+        {
+          "field": "mobile_number",
+          "label": "Mobile Number",
+          "required_for_bot": true
+        },
+        {
+          "field": "preferred_branch",
+          "label": "Which of our branches would you prefer to visit for Consultation?",
+          "required_for_bot": true,
+          "official_options": [
+            "HSR Layout",
+            "Koramangala",
+            "Brookefield",
+            "Home visit"
+          ],
+          "default_for_this_bot": "HSR Layout"
+        },
+        {
+          "field": "issue_faced",
+          "label": "What issue are you facing?",
+          "required_for_bot": true,
+          "official_options": [
+            "Knee, Ankle, Feet Pain",
+            "Neck, Back Pain",
+            "Shoulder, Elbow, or Wrist Pain",
+            "Other"
+          ]
+        },
+        {
+          "field": "consultation_availability",
+          "label": "When will you be available for your Consultation?",
+          "required_for_bot": true
+        }
       ]
     }
   },
-  "appointment_booking": {
-    "booking_supported": true,
-    "official_booking_page_fields": [
-      "Name",
-      "Email",
-      "Phone No",
-      "Select the clinic you would like to visit",
-      "Your Message"
-    ],
-    "official_contact_form_fields": [
-      "Full Name",
-      "Mobile Number",
-      "Preferred branch",
-      "Issue faced",
-      "Consultation availability"
-    ],
-    "official_branch_options_in_form": [
-      "HSR Layout",
-      "Koramangala",
-      "Brookefield",
-      "Home visit"
-    ],
-    "official_issue_options_in_form": [
-      "Knee, Ankle, Feet Pain",
-      "Neck, Back Pain",
-      "Shoulder, Elbow, or Wrist Pain",
-      "Other"
-    ],
-    "recommended_bot_booking_fields": [
+  "recommended_bot_intake_schema": {
+    "purpose": "Collect enough information to route the customer safely and help the HSR clinic team confirm the appointment.",
+    "minimal_required_fields": [
       {
         "field": "full_name",
+        "type": "string",
         "required": true,
-        "type": "string"
+        "customer_prompt": "May I have your full name?"
       },
       {
         "field": "mobile_number",
+        "type": "india_mobile_number",
         "required": true,
-        "type": "phone_india"
-      },
-      {
-        "field": "email",
-        "required": false,
-        "type": "email"
+        "customer_prompt": "Please share your mobile number so the HSR Layout clinic team can contact you."
       },
       {
         "field": "preferred_branch",
-        "required": true,
         "type": "enum",
+        "required": true,
         "default": "HSR Layout",
         "allowed_values": [
           "HSR Layout",
-          "Home visit",
           "Koramangala",
           "Brookefield",
-          "Domlur"
-        ]
+          "Ejipura",
+          "Domlur",
+          "Home Visit"
+        ],
+        "customer_prompt": "This bot is for the HSR Layout branch. Should I proceed with HSR Layout?"
       },
       {
         "field": "consultation_mode",
-        "required": true,
         "type": "enum",
+        "required": true,
         "allowed_values": [
           "clinic_visit",
-          "home_visit",
-          "virtual_consultation"
-        ]
+          "virtual_consultation",
+          "home_visit"
+        ],
+        "customer_prompt": "Would you prefer a clinic visit, virtual consultation or home visit?"
       },
       {
-        "field": "main_issue_category",
-        "required": true,
+        "field": "issue_category",
         "type": "enum",
+        "required": true,
         "allowed_values": [
           "Knee, Ankle, Feet Pain",
           "Neck, Back Pain",
           "Shoulder, Elbow, or Wrist Pain",
-          "Post-surgery rehabilitation",
-          "Sports injury",
-          "Senior citizen fall prevention",
-          "Diet and nutrition",
-          "Clinical fitness",
+          "Lower Back Pain",
+          "Post-operative physiotherapy",
+          "Neuro Rehabilitation",
+          "Vestibular or balance issue",
+          "Geriatric rehabilitation",
+          "Pain Management",
+          "Clinical Fitness",
+          "Diet and Nutrition",
+          "Fall prevention Program",
           "Other"
-        ]
+        ],
+        "customer_prompt": "What issue are you facing?"
       },
       {
         "field": "problem_description",
+        "type": "text",
         "required": true,
-        "type": "text"
+        "customer_prompt": "Please describe the problem briefly."
+      },
+      {
+        "field": "preferred_consultation_availability",
+        "type": "text",
+        "required": true,
+        "customer_prompt": "When will you be available for the consultation?"
+      },
+      {
+        "field": "consent_to_be_contacted",
+        "type": "boolean",
+        "required": true,
+        "customer_prompt": "Do you consent to Balance Plus contacting you for appointment coordination?"
+      }
+    ],
+    "optional_but_recommended_fields": [
+      {
+        "field": "age",
+        "type": "integer",
+        "required": false,
+        "use": "Routing and safety context"
       },
       {
         "field": "pain_score_0_to_10",
-        "required": false,
         "type": "integer",
         "min": 0,
-        "max": 10
+        "max": 10,
+        "required": false,
+        "use": "Prioritization and triage"
       },
       {
         "field": "duration_of_problem",
-        "required": false,
         "type": "enum",
+        "required": false,
         "allowed_values": [
           "less_than_24_hours",
           "1_to_3_days",
@@ -715,217 +1005,49 @@
         ]
       },
       {
-        "field": "preferred_date",
-        "required": true,
-        "type": "date"
+        "field": "injury_or_surgery_related",
+        "type": "boolean",
+        "required": false
       },
       {
-        "field": "preferred_time_window",
-        "required": true,
-        "type": "string"
+        "field": "doctor_referral_available",
+        "type": "boolean",
+        "required": false
       },
       {
-        "field": "doctor_referral_or_reports_available",
-        "required": false,
-        "type": "boolean"
+        "field": "reports_available",
+        "type": "boolean",
+        "required": false
       },
       {
-        "field": "red_flag_symptoms_present",
-        "required": true,
-        "type": "boolean"
+        "field": "home_visit_area",
+        "type": "text",
+        "required_if": "consultation_mode == home_visit"
       },
       {
-        "field": "consent_to_be_contacted",
-        "required": true,
-        "type": "boolean"
+        "field": "home_visit_pincode",
+        "type": "string",
+        "required_if": "consultation_mode == home_visit"
+      },
+      {
+        "field": "email",
+        "type": "email",
+        "required": false
       }
     ],
-    "booking_confirmation_rule": "The bot should not say appointment is confirmed unless backend slot confirmation exists. It should say: 'I have shared your request with the HSR Layout clinic team. They will confirm the slot shortly.'",
-    "lead_priority_rules": [
-      {
-        "condition": "red_flag_symptoms_present = true",
-        "priority": "urgent_medical_referral",
-        "action": "Do not book physiotherapy directly. Advise urgent medical care and optionally offer follow-up after medical clearance."
-      },
-      {
-        "condition": "post_surgery = true",
-        "priority": "high",
-        "action": "Collect surgery date, doctor advice, discharge summary availability and preferred consultation mode."
-      },
-      {
-        "condition": "senior_citizen_fall_or_balance_issue = true",
-        "priority": "high",
-        "action": "Recommend fall-prevention or geriatric rehab screening."
-      },
-      {
-        "condition": "pain_score >= 7",
-        "priority": "high",
-        "action": "Screen for trauma, fever, neurological symptoms and worsening pain before booking."
-      },
-      {
-        "condition": "general_pain_without_red_flags",
-        "priority": "normal",
-        "action": "Recommend physiotherapy assessment."
-      }
+    "do_not_collect_unless_clinic_confirms_secure_workflow": [
+      "medical reports as file uploads",
+      "prescriptions as file uploads",
+      "full medical history",
+      "Aadhaar or government ID",
+      "payment card details",
+      "insurance policy documents"
     ]
   },
-  "bot_service_recommendation_engine": {
-    "default_first_visit_recommendation": {
-      "service_id": "physiotherapy_services",
-      "recommendation_text": "Based on what you shared, an initial physiotherapy assessment at the HSR Layout branch would be the safest starting point. The physiotherapist can assess the issue and suggest the right treatment plan.",
-      "use_when": [
-        "customer is unsure",
-        "customer reports pain",
-        "customer reports stiffness",
-        "customer reports injury",
-        "customer asks which service to choose"
-      ]
-    },
-    "rules": [
-      {
-        "customer_says": [
-          "back pain",
-          "lower back pain",
-          "neck pain",
-          "shoulder pain",
-          "pain management"
-        ],
-        "recommended_service": "Physiotherapy Services",
-        "recommended_mode": "clinic_visit",
-        "follow_up_questions": [
-          "How long have you had this pain?",
-          "What is your pain score from 0 to 10?",
-          "Does the pain travel to your arm or leg?",
-          "Was there any fall, accident or injury?",
-          "Do you have numbness, weakness, fever or bladder/bowel issues?"
-        ]
-      },
-      {
-        "customer_says": [
-          "knee pain",
-          "ankle pain",
-          "feet pain",
-          "heel pain"
-        ],
-        "recommended_service": "Physiotherapy Services",
-        "recommended_mode": "clinic_visit",
-        "follow_up_questions": [
-          "Was this due to a sports injury, fall or twist?",
-          "Can you walk normally?",
-          "Is there swelling or bruising?",
-          "What is your pain score from 0 to 10?"
-        ]
-      },
-      {
-        "customer_says": [
-          "post surgery",
-          "after surgery",
-          "ACL",
-          "knee replacement",
-          "fracture",
-          "operation"
-        ],
-        "recommended_service": "Post-operative Physiotherapy",
-        "recommended_mode": "clinic_visit_or_home_visit",
-        "follow_up_questions": [
-          "What surgery was done?",
-          "When was the surgery?",
-          "Has your surgeon advised physiotherapy?",
-          "Do you have the discharge summary or protocol?",
-          "Are you allowed to bear weight or move the joint?"
-        ]
-      },
-      {
-        "customer_says": [
-          "stroke",
-          "paralysis",
-          "nerve weakness",
-          "neurological",
-          "balance loss"
-        ],
-        "recommended_service": "Neuro Rehabilitation",
-        "recommended_mode": "clinic_visit_or_home_visit",
-        "follow_up_questions": [
-          "When did the neurological issue start?",
-          "Is there weakness on one side?",
-          "Can the patient walk or sit independently?",
-          "Has a doctor cleared physiotherapy?",
-          "Is home visit preferred?"
-        ]
-      },
-      {
-        "customer_says": [
-          "dizziness",
-          "vertigo",
-          "balance problem",
-          "unsteady"
-        ],
-        "recommended_service": "Vestibular Rehabilitation",
-        "recommended_mode": "clinic_visit",
-        "follow_up_questions": [
-          "When did the dizziness start?",
-          "Is it triggered by head movement?",
-          "Any fall, fainting, severe headache, speech issue or weakness?",
-          "Have you consulted an ENT or physician?"
-        ]
-      },
-      {
-        "customer_says": [
-          "elderly",
-          "senior citizen",
-          "fall prevention",
-          "falls",
-          "walking difficulty"
-        ],
-        "recommended_service": "Senior Citizen Fall Prevention Program",
-        "recommended_mode": "home_visit_or_virtual_consultation",
-        "follow_up_questions": [
-          "Has the patient fallen recently?",
-          "Was there any injury after the fall?",
-          "Can the patient walk independently?",
-          "Is there fear of falling?",
-          "Would you prefer home visit or online assessment?"
-        ]
-      },
-      {
-        "customer_says": [
-          "weight loss",
-          "weight gain",
-          "diet",
-          "nutrition",
-          "diabetes diet",
-          "cholesterol diet"
-        ],
-        "recommended_service": "Diet and Nutrition",
-        "recommended_mode": "virtual_consultation_or_clinic_visit",
-        "follow_up_questions": [
-          "What is your goal: weight loss, weight gain, medical nutrition or fitness nutrition?",
-          "Do you have diabetes, cholesterol, pregnancy/lactation or other medical conditions?",
-          "Would you prefer an online or clinic consultation?"
-        ]
-      },
-      {
-        "customer_says": [
-          "fitness",
-          "strength",
-          "conditioning",
-          "sports training",
-          "endurance"
-        ],
-        "recommended_service": "Clinical Fitness",
-        "recommended_mode": "clinic_visit_or_virtual_consultation",
-        "follow_up_questions": [
-          "Are you recovering from an injury?",
-          "What is your current fitness goal?",
-          "Do you have pain during exercise?",
-          "Do you prefer supervised clinic sessions or online guidance?"
-        ]
-      }
-    ]
-  },
-  "medical_safety_and_red_flags": {
-    "bot_disclaimer": "I can help you choose a suitable Balance Plus service and book a consultation, but I cannot diagnose medical conditions. A physiotherapist or doctor should assess you for medical advice.",
-    "emergency_or_doctor_referral_triggers": [
+  "triage_and_safety_guardrails": {
+    "source_type": "internal_safety_guardrail",
+    "customer_facing_disclaimer": "I can help with appointment routing, but I cannot diagnose. For urgent or severe symptoms, please seek medical care immediately.",
+    "red_flag_symptoms": [
       "chest pain",
       "severe shortness of breath",
       "loss of consciousness",
@@ -939,303 +1061,567 @@
       "numbness in private or saddle area",
       "high fever with severe back or neck pain",
       "severe unexplained night pain",
-      "post-surgery wound redness, pus, bleeding or fever",
-      "rapidly worsening neurological symptoms"
+      "rapidly worsening numbness or weakness",
+      "post-surgery wound redness, pus, bleeding or fever"
     ],
-    "red_flag_response": "Your symptoms may need urgent medical attention. Please visit the nearest hospital or emergency department immediately. Physiotherapy can be considered after medical clearance.",
-    "requires_medical_clearance_before_physiotherapy": [
+    "red_flag_bot_action": {
+      "action": "do_not_book_directly",
+      "message": "Your symptoms may need urgent medical attention. Please visit the nearest hospital or emergency department immediately. Physiotherapy can be considered after medical clearance."
+    },
+    "medical_clearance_recommended_before_booking": [
       "recent surgery",
       "recent fracture",
       "suspected fracture",
       "stroke or neurological event",
       "cardiac condition",
-      "pregnancy complication",
+      "pregnancy-related complication",
       "uncontrolled blood pressure",
       "uncontrolled diabetes",
       "active infection or fever",
       "cancer-related unexplained pain",
       "severe osteoporosis"
     ],
-    "bot_must_not": [
+    "bot_must_not_do": [
       "diagnose the condition",
-      "guarantee recovery",
-      "claim pain will end in one session",
-      "ask customer to stop prescribed medication",
-      "override doctor advice",
-      "confirm appointment without slot confirmation",
-      "collect sensitive medical records unless the clinic has consent and storage process"
+      "prescribe medicines",
+      "tell customer to stop prescribed medicines",
+      "guarantee cure",
+      "guarantee recovery timeline",
+      "recommend exercises for red-flag symptoms",
+      "interpret MRI, X-ray or lab reports",
+      "claim physiotherapy is a substitute for emergency care"
     ]
   },
-  "customer_intake_questions": {
-    "minimal_lead_capture": [
-      "May I have your full name?",
-      "Please share your mobile number.",
-      "Are you looking for HSR Layout clinic visit, home visit or virtual consultation?",
-      "What issue are you facing?",
-      "When would you be available for consultation?"
-    ],
-    "physio_assessment_questions": [
-      "Where exactly is the pain or problem?",
-      "How long has this been happening?",
-      "What is your pain level from 0 to 10?",
-      "Did this start after an injury, fall, gym session, sports activity or surgery?",
-      "Is the pain constant or only during movement?",
-      "Does the pain travel to your arm or leg?",
-      "Do you feel numbness, tingling or weakness?",
-      "What daily activity is difficult because of this?",
-      "Have you consulted a doctor or taken any scan/report?",
-      "Do you prefer clinic visit, home visit or online consultation?"
-    ],
-    "home_visit_questions": [
-      "Which area and pincode should the therapist visit?",
-      "Is the patient able to walk or move independently?",
-      "Is there a caretaker available at home?",
-      "Are there stairs or lift access?",
-      "What time window is convenient?"
-    ],
-    "post_surgery_questions": [
-      "What surgery was done?",
-      "What was the surgery date?",
-      "Has the surgeon advised physiotherapy?",
-      "Are stitches removed?",
-      "Is there any fever, wound discharge or unusual swelling?",
-      "Do you have a discharge summary or rehab protocol?"
-    ],
-    "diet_nutrition_questions": [
-      "What is your nutrition goal?",
-      "Do you want weight loss, weight gain, sports nutrition or medical-condition support?",
-      "Do you have diabetes, high cholesterol, pregnancy/lactation or other medical conditions?",
-      "Do you prefer online or clinic consultation?"
+  "service_recommendation_logic": {
+    "default_recommendation": {
+      "condition": "customer_has_pain_or_is_unsure",
+      "recommended_service_id": "physiotherapy_services",
+      "recommended_mode": "clinic_visit",
+      "message": "Based on what you shared, a physiotherapy consultation at the HSR Layout branch would be a good starting point. The physiotherapist can assess your issue and suggest the next steps."
+    },
+    "rules": [
+      {
+        "rule_id": "neck_back_pain",
+        "trigger_terms": [
+          "neck pain",
+          "back pain",
+          "lower back pain",
+          "stiff neck",
+          "shoulder pain"
+        ],
+        "recommend_service_id": "physiotherapy_services",
+        "recommend_sub_service_id": "pain_management",
+        "preferred_mode": "clinic_visit",
+        "ask_follow_up": [
+          "How long have you had this pain?",
+          "What is your pain score from 0 to 10?",
+          "Did it start after an injury or sudden movement?",
+          "Do you have numbness, tingling, weakness, fever or bladder/bowel issues?"
+        ]
+      },
+      {
+        "rule_id": "knee_ankle_feet_pain",
+        "trigger_terms": [
+          "knee pain",
+          "ankle pain",
+          "feet pain",
+          "foot pain",
+          "heel pain"
+        ],
+        "recommend_service_id": "physiotherapy_services",
+        "recommend_sub_service_id": "pain_management",
+        "preferred_mode": "clinic_visit",
+        "ask_follow_up": [
+          "Was there any injury, twist or fall?",
+          "Is there swelling?",
+          "Can you walk normally?",
+          "What is your pain score from 0 to 10?"
+        ]
+      },
+      {
+        "rule_id": "post_surgery",
+        "trigger_terms": [
+          "post surgery",
+          "after surgery",
+          "operation",
+          "post-operative",
+          "ACL",
+          "replacement",
+          "fracture surgery"
+        ],
+        "recommend_service_id": "physiotherapy_services",
+        "recommend_sub_service_id": "post_operative_physiotherapy",
+        "preferred_mode": "clinic_visit_or_home_visit",
+        "ask_follow_up": [
+          "What surgery was done?",
+          "When was the surgery?",
+          "Has your doctor advised physiotherapy?",
+          "Do you have a discharge summary or rehab protocol?",
+          "Is there fever, wound discharge, unusual swelling or severe pain?"
+        ],
+        "requires_human_review": true
+      },
+      {
+        "rule_id": "neuro_rehab",
+        "trigger_terms": [
+          "stroke",
+          "paralysis",
+          "nerve weakness",
+          "neurological",
+          "movement impairment"
+        ],
+        "recommend_service_id": "physiotherapy_services",
+        "recommend_sub_service_id": "neuro_rehabilitation",
+        "preferred_mode": "clinic_visit_or_home_visit",
+        "ask_follow_up": [
+          "When did this issue start?",
+          "Is there weakness on one side?",
+          "Can the patient sit, stand or walk independently?",
+          "Has a doctor cleared physiotherapy?"
+        ],
+        "requires_human_review": true
+      },
+      {
+        "rule_id": "vestibular_balance",
+        "trigger_terms": [
+          "dizziness",
+          "vertigo",
+          "balance problem",
+          "unsteady"
+        ],
+        "recommend_service_id": "physiotherapy_services",
+        "recommend_sub_service_id": "vestibular_rehabilitation",
+        "preferred_mode": "clinic_visit",
+        "ask_follow_up": [
+          "When did the dizziness start?",
+          "Is it triggered by head movement?",
+          "Have you had a recent fall, fainting, severe headache, speech issue or weakness?"
+        ],
+        "requires_human_review": true
+      },
+      {
+        "rule_id": "elderly_fall_prevention",
+        "trigger_terms": [
+          "fall prevention",
+          "senior citizen",
+          "elderly",
+          "fear of falling",
+          "balance training"
+        ],
+        "recommend_service_id": "fall_prevention_program",
+        "preferred_mode": "virtual_consultation_or_home_visit",
+        "ask_follow_up": [
+          "Has the person fallen recently?",
+          "Was there any injury after the fall?",
+          "Can they walk independently?",
+          "Would you prefer online training, clinic visit or home visit?"
+        ]
+      },
+      {
+        "rule_id": "clinical_fitness",
+        "trigger_terms": [
+          "fitness",
+          "strength",
+          "conditioning",
+          "weight loss",
+          "weight gain",
+          "endurance",
+          "sports training"
+        ],
+        "recommend_service_id": "clinical_fitness",
+        "preferred_mode": "clinic_visit_or_virtual_consultation",
+        "ask_follow_up": [
+          "What is your main goal?",
+          "Are you recovering from an injury?",
+          "Do you currently have pain during exercise?",
+          "Would you prefer clinic or virtual guidance?"
+        ]
+      },
+      {
+        "rule_id": "diet_nutrition",
+        "trigger_terms": [
+          "diet",
+          "nutrition",
+          "meal plan",
+          "diabetes diet",
+          "cholesterol diet",
+          "pregnancy diet",
+          "athlete meal plan"
+        ],
+        "recommend_service_id": "diet_and_nutrition",
+        "preferred_mode": "virtual_consultation_or_clinic_visit",
+        "ask_follow_up": [
+          "What is your nutrition goal?",
+          "Do you want weight loss, weight gain, sports nutrition or medical-condition support?",
+          "Do you have diabetes, high cholesterol, pregnancy/lactation or another medical condition?"
+        ],
+        "requires_human_review": true
+      }
     ]
   },
-  "privacy_and_consent": {
-    "official_privacy_policy_last_updated": "2025-04-28",
-    "official_website_collects": [
-      "full name",
-      "email address",
-      "phone number",
-      "preferred clinic location or appointment time",
-      "information submitted in contact forms"
-    ],
-    "official_website_states_sensitive_health_info_not_collected_or_stored": true,
-    "bot_implication": "If the bot collects symptom details, medical reports or health history, the clinic should update consent, privacy workflow and storage rules accordingly.",
-    "required_bot_consents": [
-      {
-        "consent_id": "contact_consent",
-        "text": "I agree that Balance Plus may contact me for appointment coordination.",
-        "required": true
-      },
-      {
-        "consent_id": "health_info_consent",
-        "text": "I agree to share basic symptom information for appointment triage and service recommendation.",
-        "required": true
-      },
-      {
-        "consent_id": "marketing_consent",
-        "text": "I agree to receive occasional offers or updates.",
-        "required": false
-      }
-    ],
-    "data_minimization_rule": "Collect only information needed for booking, triage and consultation coordination.",
-    "sensitive_file_upload_rule": "Do not request or store medical reports unless the clinic has a secure storage and explicit consent process."
-  },
-  "trust_signals": {
-    "official_website_claims": [
-      "Established in 2018 in Bangalore",
-      "5 member team of expert physiotherapists",
-      "Holistic solutions for health and physiotherapy problems",
-      "Clinic, virtual and at-home consultations"
-    ],
-    "third_party_trust_signals_needing_confirmation": [
-      {
-        "source": "Practo",
-        "rating": "5.0",
-        "patient_stories": 28,
-        "confidence": "medium"
-      },
-      {
-        "source": "Justdial",
-        "rating": "4.9",
-        "ratings_count": 299,
-        "confidence": "medium"
-      }
-    ],
-    "bot_usage_rule": "The bot may mention ratings only if the clinic approves third-party listing references. Prefer official trust signals otherwise."
-  },
-  "faq_for_bot": [
-    {
-      "question": "Which Balance Plus branch is this bot for?",
-      "answer": "This bot is configured for the Balance Plus HSR Layout branch in Sector 7, Bengaluru."
-    },
-    {
-      "question": "Do you offer home visits?",
-      "answer": "Yes, Balance Plus mentions at-home consultations. Please share your area and preferred time so the clinic team can confirm availability for your location."
-    },
-    {
-      "question": "Do you offer virtual consultation?",
-      "answer": "Yes, Balance Plus offers virtual consultation. It is useful for exercise guidance, follow-ups, posture advice, diet/nutrition and selected mild cases."
-    },
-    {
-      "question": "What problems do you treat?",
-      "answer": "Balance Plus offers physiotherapy for back pain, neck pain, shoulder pain, pain management, post-operative rehab, neuro rehab, vestibular rehab, geriatric rehab, clinical fitness, diet/nutrition and fall-prevention support."
-    },
-    {
-      "question": "What is the price?",
-      "answer": "The official website does not list confirmed pricing for the HSR branch. Please share your consultation type and preferred slot so the clinic team can confirm the exact fee."
-    },
-    {
-      "question": "What are the clinic timings?",
-      "answer": "The official website does not clearly list HSR branch hours. Please share your preferred date and time, and the HSR team will confirm slot availability."
-    },
-    {
-      "question": "Do I need a doctor's prescription?",
-      "answer": "For common pain or posture issues, a prescription may not always be required. For post-surgery, fracture, neurological, cardiac, pregnancy-related or high-risk cases, medical clearance or documents may be needed."
-    },
-    {
-      "question": "Can physiotherapy help after surgery?",
-      "answer": "Balance Plus lists post-operative physiotherapy. Please share the surgery type, date and doctor advice so the clinic can guide the next step safely."
-    },
-    {
-      "question": "Can senior citizens take fall-prevention sessions?",
-      "answer": "Yes, Balance Plus has a senior citizen fall-prevention program focused on assessment, balance exercises, confidence, mobility and reducing fall risk."
-    },
-    {
-      "question": "Can I book for diet and nutrition?",
-      "answer": "Yes, Balance Plus offers diet and nutrition support, including personalized diet plans, athlete meal plans, pregnancy/lactation nutrition, kids/adolescents, elderly care, diabetes and high cholesterol support."
-    }
-  ],
   "conversation_flows": {
-    "new_customer_booking_flow": [
-      "Greet customer and confirm HSR Layout branch.",
-      "Ask whether they want clinic visit, home visit or virtual consultation.",
-      "Ask what issue they are facing.",
-      "Screen for urgent red flags.",
-      "Recommend the most relevant service category.",
-      "Collect name, mobile number, preferred date and preferred time.",
-      "Collect optional email and report/referral availability.",
-      "Confirm that the request has been captured.",
-      "Tell customer the HSR team will confirm slot availability."
+    "new_customer_hsr_booking": [
+      {
+        "step": 1,
+        "bot_action": "Greet and confirm HSR Layout branch.",
+        "sample_message": "Hi, I can help you request a consultation with Balance Plus HSR Layout. Are you looking for a clinic visit, virtual consultation or home visit?"
+      },
+      {
+        "step": 2,
+        "bot_action": "Collect issue category and problem description.",
+        "sample_message": "What issue are you facing? For example: knee/ankle/feet pain, neck/back pain, shoulder/elbow/wrist pain, post-surgery rehab, diet/nutrition or fall prevention."
+      },
+      {
+        "step": 3,
+        "bot_action": "Screen for urgent red flags.",
+        "sample_message": "Before I proceed, do you have any severe symptoms such as sudden weakness, chest pain, loss of consciousness, suspected fracture, fever with severe pain, or loss of bladder/bowel control?"
+      },
+      {
+        "step": 4,
+        "bot_action": "Recommend suitable official service category.",
+        "sample_message": "Based on this, the relevant Balance Plus service appears to be Physiotherapy Services. The clinic team can confirm the exact consultation plan."
+      },
+      {
+        "step": 5,
+        "bot_action": "Collect name, phone and availability.",
+        "sample_message": "Please share your full name, mobile number and when you would be available for the consultation."
+      },
+      {
+        "step": 6,
+        "bot_action": "Submit lead or handoff.",
+        "sample_message": "Thanks. I have captured your consultation request for Balance Plus HSR Layout. The clinic team will confirm the slot and pricing."
+      }
     ],
-    "pain_query_flow": [
-      "Ask pain location.",
-      "Ask duration.",
-      "Ask pain score.",
-      "Ask injury/surgery history.",
-      "Ask red-flag symptoms.",
-      "Recommend physiotherapy assessment if no red flags.",
-      "Proceed to booking."
+    "price_query": [
+      {
+        "step": 1,
+        "bot_action": "Acknowledge question."
+      },
+      {
+        "step": 2,
+        "bot_action": "Do not quote unconfirmed fee."
+      },
+      {
+        "step": 3,
+        "sample_message": "The official website does not list confirmed HSR Layout pricing. Please tell me whether you need a clinic visit, virtual consultation or home visit, and the clinic team will confirm the fee."
+      }
     ],
-    "home_visit_flow": [
-      "Confirm home visit request.",
-      "Collect area, pincode and landmark.",
-      "Ask patient mobility status.",
-      "Ask preferred date and time.",
-      "Ask main issue and red flags.",
-      "Tell customer home visit availability and travel charges require clinic confirmation."
+    "hours_query": [
+      {
+        "step": 1,
+        "bot_action": "Do not quote unconfirmed timings."
+      },
+      {
+        "step": 2,
+        "sample_message": "The official website does not list confirmed HSR Layout timings. Please share your preferred date and time, and the clinic team will confirm availability."
+      }
     ],
-    "price_query_flow": [
-      "Acknowledge price question.",
-      "Explain that official HSR pricing is not published on the website.",
-      "Ask consultation type and issue.",
-      "Offer to submit details for exact price confirmation.",
-      "Avoid quoting unconfirmed price unless clinic approves."
+    "home_visit_query": [
+      {
+        "step": 1,
+        "bot_action": "State official availability."
+      },
+      {
+        "step": 2,
+        "sample_message": "Balance Plus offers at-home consultations. Please share your area, pincode and preferred time so the clinic team can confirm availability."
+      }
     ],
-    "red_flag_flow": [
-      "Pause normal booking.",
-      "State that symptoms may need urgent medical attention.",
-      "Advise nearest hospital or emergency care.",
-      "Do not provide exercises or physiotherapy treatment advice.",
-      "Offer to help with physiotherapy after medical clearance."
+    "virtual_consultation_query": [
+      {
+        "step": 1,
+        "bot_action": "State official availability."
+      },
+      {
+        "step": 2,
+        "sample_message": "Balance Plus offers video consultations as an alternative to a face-to-face appointment. Please share your issue and preferred time."
+      }
+    ],
+    "red_flag_query": [
+      {
+        "step": 1,
+        "bot_action": "Stop normal appointment flow."
+      },
+      {
+        "step": 2,
+        "sample_message": "Your symptoms may need urgent medical attention. Please visit the nearest hospital or emergency department immediately. Physiotherapy can be considered after medical clearance."
+      }
     ]
   },
-  "handoff_rules": {
-    "handoff_to_human_immediately_when": [
-      "customer reports red flag symptoms",
-      "customer asks for confirmed diagnosis",
-      "customer asks for exact pricing not present in bot database",
-      "customer asks for a specific therapist",
-      "customer wants same-day confirmed appointment",
-      "customer has post-surgery complication",
-      "customer has neurological symptoms",
-      "customer wants refund or payment support",
-      "customer asks about insurance or reimbursement",
-      "customer requests medical report review"
+  "customer_facing_response_templates": {
+    "greeting": "Hi, I can help you request a consultation with Balance Plus HSR Layout. Would you prefer a clinic visit, virtual consultation or home visit?",
+    "service_summary": "Balance Plus offers Physiotherapy Services, Clinical Fitness, Diet and Nutrition, and a Senior Citizen Fall Prevention Program.",
+    "hsr_address": "The HSR Layout branch is listed as Sector 7, HSR Layout, Bengaluru, Karnataka 560102.",
+    "phone_email": "You can contact Balance Plus at +91 74116 92516 or balanceplusinfo@gmail.com.",
+    "virtual_consultation": "Balance Plus offers video consultations as an alternative to a face-to-face appointment.",
+    "home_visit": "Balance Plus offers at-home consultations. Please share your area and preferred time so the clinic team can confirm availability.",
+    "unknown_price": "The official website does not list confirmed pricing for the HSR Layout branch. The clinic team can confirm the fee based on consultation type.",
+    "unknown_hours": "The official website does not list confirmed HSR Layout timings. Please share your preferred date and time, and the clinic team will confirm availability.",
+    "booking_not_confirmed_yet": "I have captured your consultation request. The Balance Plus HSR Layout team will confirm the slot and any applicable charges.",
+    "specific_therapist_request": "I can note your therapist preference, but the clinic team will need to confirm availability.",
+    "medical_disclaimer": "I can help with appointment routing, but I cannot diagnose or provide emergency medical advice."
+  },
+  "handoff_to_human_rules": {
+    "always_handoff_when": [
+      "red_flag_symptom_detected",
+      "post_surgery_case",
+      "neurological_case",
+      "vestibular_or_dizziness_case",
+      "pregnancy_or_lactation_nutrition_case",
+      "customer_asks_for_price",
+      "customer_asks_for_hours",
+      "customer_asks_for_specific_therapist",
+      "customer_requests_home_visit",
+      "customer_requests_same_day_confirmation",
+      "customer_wants_to_upload_reports",
+      "customer_asks_for_diagnosis",
+      "bot_confidence_low"
     ],
     "handoff_payload": [
-      "customer_name",
+      "full_name",
       "mobile_number",
+      "email_if_provided",
       "preferred_branch",
       "consultation_mode",
-      "main_issue_category",
+      "issue_category",
       "problem_description",
-      "pain_score",
-      "duration",
-      "preferred_date",
-      "preferred_time_window",
+      "pain_score_0_to_10_if_provided",
+      "duration_of_problem_if_provided",
+      "injury_or_surgery_related_if_provided",
+      "doctor_referral_available_if_provided",
+      "reports_available_if_provided",
+      "home_visit_area_if_applicable",
+      "home_visit_pincode_if_applicable",
+      "preferred_consultation_availability",
       "red_flag_status",
-      "doctor_referral_status",
-      "reports_available",
+      "bot_recommended_service_id",
       "bot_summary"
     ]
   },
-  "backend_entities": {
-    "branches": [
-      "HSR Layout",
-      "Koramangala",
-      "Brookefield",
-      "Domlur",
-      "Home visit"
-    ],
-    "services": [
-      "Physiotherapy Services",
-      "Neuro Rehabilitation",
-      "Post-operative Physiotherapy",
-      "Vestibular Rehabilitation",
-      "Acupuncture",
-      "Geriatric Rehabilitation",
-      "Pain Management",
-      "Clinical Fitness",
-      "Diet and Nutrition",
-      "Senior Citizen Fall Prevention Program"
-    ],
-    "issue_categories": [
-      "Knee, Ankle, Feet Pain",
-      "Neck, Back Pain",
-      "Shoulder, Elbow, or Wrist Pain",
-      "Sports Injury",
-      "Post-surgery Rehab",
-      "Neurological Rehab",
-      "Balance or Dizziness",
-      "Senior Citizen Fall Risk",
-      "Diet and Nutrition",
-      "Fitness and Conditioning",
-      "Other"
-    ],
+  "crm_entities": {
     "lead_statuses": [
-      "new",
+      "new_lead",
       "triage_pending",
       "red_flag_referred",
       "appointment_requested",
       "slot_confirmation_pending",
       "appointment_confirmed",
+      "price_confirmation_pending",
+      "home_visit_availability_pending",
       "rescheduled",
       "cancelled",
       "completed",
       "lost"
+    ],
+    "branch_options": [
+      "HSR Layout",
+      "Koramangala",
+      "Ejipura",
+      "Brookefield",
+      "Domlur",
+      "Home Visit"
+    ],
+    "consultation_mode_options": [
+      "clinic_visit",
+      "virtual_consultation",
+      "home_visit"
+    ],
+    "service_options": [
+      "Physiotherapy Services",
+      "Neuro Rehabilitation",
+      "Post-operative physiotherapy",
+      "Vestibular rehabilitation",
+      "Acupuncture",
+      "Geriatric rehabilitation",
+      "Pain Management",
+      "Clinical Fitness",
+      "Diet and Nutrition",
+      "Fall prevention Program"
+    ],
+    "official_issue_options": [
+      "Knee, Ankle, Feet Pain",
+      "Neck, Back Pain",
+      "Shoulder, Elbow, or Wrist Pain",
+      "Other"
+    ],
+    "expanded_bot_issue_options": [
+      "Knee, Ankle, Feet Pain",
+      "Neck, Back Pain",
+      "Shoulder, Elbow, or Wrist Pain",
+      "Lower Back Pain",
+      "Post-operative physiotherapy",
+      "Neuro Rehabilitation",
+      "Vestibular or balance issue",
+      "Geriatric rehabilitation",
+      "Clinical Fitness",
+      "Diet and Nutrition",
+      "Fall prevention Program",
+      "Other"
     ]
   },
-  "implementation_notes": {
-    "most_important_correction_before_go_live": [
-      "Confirm exact HSR street address.",
-      "Confirm HSR operating hours.",
-      "Confirm HSR consultation price and package pricing.",
-      "Confirm HSR therapist list and therapist availability.",
-      "Confirm home visit areas, radius and travel fee.",
-      "Confirm whether WhatsApp is active on the listed phone number.",
-      "Confirm cancellation, reschedule, no-show and refund policy.",
-      "Confirm whether the bot is allowed to collect symptom details under clinic privacy policy."
-    ],
-    "recommended_bot_default_response_for_uncertain_fields": "I do not want to give you incorrect information. The HSR clinic team will confirm this before your appointment.",
-    "recommended_customer_experience_principle": "Keep the customer journey simple: identify issue, screen safety, recommend service, collect slot preference, and hand off for confirmation."
-  }
+  "analytics_events": [
+    {
+      "event_name": "bot_session_started",
+      "description": "Customer started bot interaction."
+    },
+    {
+      "event_name": "branch_confirmed_hsr",
+      "description": "Customer confirmed HSR Layout branch."
+    },
+    {
+      "event_name": "consultation_mode_selected",
+      "description": "Customer selected clinic, virtual or home visit."
+    },
+    {
+      "event_name": "issue_category_selected",
+      "description": "Customer selected or described issue."
+    },
+    {
+      "event_name": "red_flag_detected",
+      "description": "Bot detected possible urgent symptom."
+    },
+    {
+      "event_name": "service_recommended",
+      "description": "Bot recommended an official BalancePlus service category."
+    },
+    {
+      "event_name": "lead_details_collected",
+      "description": "Name and phone number collected with consent."
+    },
+    {
+      "event_name": "appointment_requested",
+      "description": "Appointment request captured."
+    },
+    {
+      "event_name": "human_handoff_triggered",
+      "description": "Conversation handed to clinic team."
+    },
+    {
+      "event_name": "price_query_received",
+      "description": "Customer asked for pricing."
+    },
+    {
+      "event_name": "hours_query_received",
+      "description": "Customer asked for operating hours."
+    },
+    {
+      "event_name": "home_visit_requested",
+      "description": "Customer requested at-home consultation."
+    },
+    {
+      "event_name": "virtual_consultation_requested",
+      "description": "Customer requested video consultation."
+    }
+  ],
+  "compliance_and_privacy": {
+    "privacy_policy_page_present": {
+      "value": true,
+      "source_confidence": "official_website_confirmed"
+    },
+    "bot_data_collection_policy": {
+      "collect_only_booking_relevant_data": true,
+      "collect_health_details_only_for_routing": true,
+      "require_contact_consent": true,
+      "require_health_info_consent_if_symptoms_collected": true,
+      "do_not_collect_payment_card_data": true,
+      "do_not_collect_government_id": true,
+      "do_not_store_reports_without_secure_workflow": true
+    },
+    "recommended_consent_texts": [
+      {
+        "consent_id": "contact_consent",
+        "required": true,
+        "text": "I agree that Balance Plus may contact me for appointment coordination."
+      },
+      {
+        "consent_id": "basic_health_info_consent",
+        "required": true,
+        "text": "I agree to share basic symptom information for consultation routing."
+      },
+      {
+        "consent_id": "marketing_consent",
+        "required": false,
+        "text": "I agree to receive occasional updates or offers from Balance Plus."
+      }
+    ]
+  },
+  "unconfirmed_fields_requiring_balanceplus_validation_before_go_live": {
+    "hsr_exact_street_address": "needs_confirmation",
+    "hsr_google_maps_url": "needs_confirmation",
+    "hsr_operating_hours": "needs_confirmation",
+    "hsr_consultation_fee": "needs_confirmation",
+    "virtual_consultation_fee": "needs_confirmation",
+    "home_visit_fee": "needs_confirmation",
+    "home_visit_service_radius": "needs_confirmation",
+    "home_visit_travel_charges": "needs_confirmation",
+    "therapist_branch_mapping": "needs_confirmation",
+    "therapist_availability_schedule": "needs_confirmation",
+    "appointment_slot_duration": "needs_confirmation",
+    "same_day_booking_available": "needs_confirmation",
+    "walk_in_allowed": "needs_confirmation",
+    "cancellation_policy": "needs_confirmation",
+    "rescheduling_policy": "needs_confirmation",
+    "refund_policy": "needs_confirmation",
+    "package_pricing": "needs_confirmation",
+    "gst_invoice_available": "needs_confirmation",
+    "insurance_or_reimbursement_support": "needs_confirmation",
+    "upi_payment_at_clinic": "needs_confirmation",
+    "card_payment_at_clinic": "needs_confirmation",
+    "parking_available": "needs_confirmation",
+    "wheelchair_accessible": "needs_confirmation",
+    "female_therapist_preference_available": "needs_confirmation",
+    "language_support": "needs_confirmation",
+    "medical_report_upload_workflow": "needs_confirmation"
+  },
+  "production_readiness_checklist": [
+    {
+      "item": "Confirm exact HSR street address",
+      "priority": "critical",
+      "status": "pending"
+    },
+    {
+      "item": "Confirm HSR operating hours",
+      "priority": "critical",
+      "status": "pending"
+    },
+    {
+      "item": "Confirm consultation fees and package pricing",
+      "priority": "critical",
+      "status": "pending"
+    },
+    {
+      "item": "Confirm therapist mapping and availability for HSR branch",
+      "priority": "critical",
+      "status": "pending"
+    },
+    {
+      "item": "Confirm home visit coverage areas and charges",
+      "priority": "critical",
+      "status": "pending"
+    },
+    {
+      "item": "Confirm virtual consultation workflow",
+      "priority": "high",
+      "status": "pending"
+    },
+    {
+      "item": "Confirm whether bot can collect symptom details under privacy policy",
+      "priority": "high",
+      "status": "pending"
+    },
+    {
+      "item": "Confirm cancellation, rescheduling and refund policy",
+      "priority": "high",
+      "status": "pending"
+    },
+    {
+      "item": "Confirm payment modes and invoice policy",
+      "priority": "medium",
+      "status": "pending"
+    },
+    {
+      "item": "Confirm accessibility, parking and facility details",
+      "priority": "medium",
+      "status": "pending"
+    }
+  ]
 }

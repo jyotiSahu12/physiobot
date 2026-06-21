@@ -21,7 +21,7 @@ config = get_config()
 orchestrator = Orchestrator(config)
 
 # Bump on each meaningful deploy so /healthz tells us exactly what's live.
-BUILD = "2026-06-09-3-days-prompt"
+BUILD = "2026-06-21-clinic-kb-v3-migration"
 
 
 @app.get("/healthz")
@@ -54,8 +54,14 @@ async def receive(request: Request, background: BackgroundTasks):
         return Response(status_code=403)
 
     payload = await request.json()
-    for phone, text in webhook.parse_incoming(payload):
-        background.add_task(orchestrator.handle_message, phone, text)
+    for event in webhook.parse_incoming(payload):
+        background.add_task(
+            orchestrator.handle_message,
+            event["phone"],
+            event["text"],
+            interactive_id=event["interactive_id"],
+            profile_name=event["profile_name"],
+        )
     return {"status": "received"}
 
 

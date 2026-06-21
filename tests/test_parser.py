@@ -1,14 +1,13 @@
-from unittest.mock import MagicMock
-import pytest
-from physiobot.config import Config
-from physiobot.parser import Parser
+import datetime as dt
+
+from physiobot.parser import Parser, parse_natural_date, parse_natural_time
 
 
 class StubProvider:
     def __init__(self, content):
         self.content = content
 
-    def chat(self, messages, tools=None):
+    def chat(self, messages):
         return {"role": "assistant", "content": self.content}
 
 
@@ -65,3 +64,95 @@ def test_parser_failure_fallback(config):
     assert result["intent"] == "other"
     assert result["slots"] == {}
     assert result["red_flags_detected"] == []
+
+
+def test_parser_fallback_resolves_date_change_when_awaiting_date(config):
+    # The bot just asked for a date and the LLM is unavailable — the regex
+    # fallback must still resolve a spoken date like "23rd June" instead of
+    # silently dropping it (the bug where the bot kept re-showing the old
+    # date's slots after the patient asked for a different one).
+    provider = StubProvider("Not JSON at all")
+    parser = Parser(config, provider=provider)
+    history = [
+        {"role": "assistant", "content": "What date would you like to come in?"},
+        {"role": "user", "content": "Can I have appointment for 23rd June?"},
+    ]
+    result = parser.parse_message(history)
+    assert result["slots"]["preferred_date"] == "2026-06-23"
+
+
+def test_parser_fallback_resolves_time_when_awaiting_slot_pick(config):
+    provider = StubProvider("Not JSON at all")
+    parser = Parser(config, provider=provider)
+    history = [
+        {"role": "assistant", "content": "Available times for 2026-06-22:\nWhich time works best for you?"},
+        {"role": "user", "content": "1pm works for me"},
+    ]
+    result = parser.parse_message(history)
+    assert result["slots"]["preferred_time"] == "13:00"
+
+
+def test_parser_fallback_prefers_date_over_time_when_both_possible(config):
+    # While slots are shown, a free-text date should switch the booking date
+    # rather than being misread as a time.
+    provider = StubProvider("Not JSON at all")
+    parser = Parser(config, provider=provider)
+    history = [
+        {"role": "assistant", "content": "Available times for 2026-06-22:\nWhich time works best for you?"},
+        {"role": "user", "content": "Actually, can we do 23rd June instead?"},
+    ]
+    result = parser.parse_message(history)
+    assert result["slots"]["preferred_date"] == "2026-06-23"
+    assert "preferred_time" not in result["slots"]
+
+
+def test_parser_fallback_does_not_extract_date_outside_date_phase(config):
+    # No date/time extraction should happen unless the bot is actually
+    # waiting on a date or time — otherwise a stray mention of a month
+    # anywhere in the conversation could get mistaken for a scheduling answer.
+    provider = StubProvider("Not JSON at all")
+    parser = Parser(config, provider=provider)
+    history = [
+        {"role": "assistant", "content": "Thanks Asha! What main problem or pain are you facing?"},
+        {"role": "user", "content": "I've had knee pain since 23rd June"},
+    ]
+    result = parser.parse_message(history)
+    assert "preferred_date" not in result["slots"]
+
+
+def test_parse_natural_date_iso_passthrough():
+    assert parse_natural_date("2026-06-25", dt.date(2026, 6, 21)) == "2026-06-25"
+
+
+def test_parse_natural_date_relative_words():
+    today = dt.date(2026, 6, 21)  # Sunday
+    assert parse_natural_date("today", today) == "2026-06-21"
+    assert parse_natural_date("tomorrow", today) == "2026-06-22"
+
+
+def test_parse_natural_date_weekday_name_rolls_to_upcoming_occurrence():
+    today = dt.date(2026, 6, 21)  # Sunday
+    assert parse_natural_date("monday", today) == "2026-06-22"
+
+
+def test_parse_natural_date_day_month_and_month_day_orderings():
+    today = dt.date(2026, 6, 21)
+    assert parse_natural_date("23rd June", today) == "2026-06-23"
+    assert parse_natural_date("June 23", today) == "2026-06-23"
+
+
+def test_parse_natural_date_rolls_to_next_year_when_date_already_passed():
+    today = dt.date(2026, 6, 21)
+    assert parse_natural_date("3rd January", today) == "2027-01-03"
+
+
+def test_parse_natural_date_returns_none_when_no_date_present():
+    assert parse_natural_date("I am having lower back pain", dt.date(2026, 6, 21)) is None
+
+
+def test_parse_natural_time_handles_common_formats():
+    assert parse_natural_time("1pm") == "13:00"
+    assert parse_natural_time("13:00") == "13:00"
+    assert parse_natural_time("9am") == "09:00"
+    assert parse_natural_time("12am") == "00:00"
+    assert parse_natural_time("no time mentioned here") is None

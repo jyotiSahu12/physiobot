@@ -1,5 +1,4 @@
 from unittest.mock import patch
-import pytest
 from physiobot.outbound import Outbound
 from physiobot.config import MetaConfig
 
@@ -39,6 +38,10 @@ def test_send_template_interactive_configured(config):
         json_payload = kwargs["json"]
         assert json_payload["type"] == "interactive"
         assert json_payload["interactive"]["type"] == "button"
+        # the button id stays machine-readable...
         assert "clinic_visit" in str(json_payload)
-        
-        assert "clinic_visit" in reply
+
+        # ...but the body text shown to the patient is plain, human language,
+        # not the raw snake_case slot value
+        assert "clinic_visit" not in reply
+        assert "consultation" in reply.lower()

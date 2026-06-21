@@ -37,7 +37,26 @@ def test_parse_incoming_text():
             }]
         }]
     }
-    assert webhook.parse_incoming(payload) == [("9199", "hi")]
+    assert webhook.parse_incoming(payload) == [
+        {"phone": "9199", "text": "hi", "interactive_id": None, "profile_name": None}
+    ]
+
+
+def test_parse_incoming_includes_profile_name():
+    payload = {
+        "entry": [{
+            "changes": [{
+                "value": {
+                    "contacts": [{"wa_id": "9199", "profile": {"name": "Asha"}}],
+                    "messages": [
+                        {"type": "text", "from": "9199", "text": {"body": "hi"}}
+                    ],
+                }
+            }]
+        }]
+    }
+    [event] = webhook.parse_incoming(payload)
+    assert event["profile_name"] == "Asha"
 
 
 def test_parse_incoming_ignores_status():
@@ -63,7 +82,9 @@ def test_parse_incoming_interactive():
             }]
         }]
     }
-    assert webhook.parse_incoming(payload_btn) == [("9199", "Home Visit")]
+    assert webhook.parse_incoming(payload_btn) == [
+        {"phone": "9199", "text": "Home Visit", "interactive_id": "home_visit", "profile_name": None}
+    ]
 
     # Test list reply
     payload_list = {
@@ -82,4 +103,6 @@ def test_parse_incoming_interactive():
             }]
         }]
     }
-    assert webhook.parse_incoming(payload_list) == [("9199", "Neck")]
+    assert webhook.parse_incoming(payload_list) == [
+        {"phone": "9199", "text": "Neck", "interactive_id": "neck", "profile_name": None}
+    ]

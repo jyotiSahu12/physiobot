@@ -22,12 +22,21 @@ class Store:
         self._init_schema()
 
     def _connect(self) -> sqlite3.Connection:
+        # Re-create the schema on every connection (cheap: CREATE TABLE IF NOT
+        # EXISTS), not just once at construction. The db file lives outside the
+        # process and can be deleted/replaced while this object is still alive
+        # (e.g. an ops cleanup) — without this, the next query would crash with
+        # "no such table" instead of self-healing.
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
+        self._init_schema(conn)
         return conn
 
-    def _init_schema(self) -> None:
-        with self._connect() as conn:
+    def _init_schema(self, conn: sqlite3.Connection | None = None) -> None:
+        own_conn = conn is None
+        if own_conn:
+            conn = sqlite3.connect(self.db_path)
+        try:
             conn.executescript(
                 """
                 CREATE TABLE IF NOT EXISTS sessions (
@@ -45,6 +54,10 @@ class Store:
                 CREATE INDEX IF NOT EXISTS idx_messages_phone ON messages(phone, id);
                 """
             )
+            conn.commit()
+        finally:
+            if own_conn:
+                conn.close()
 
     def touch_session(self, phone: str) -> None:
         with self._connect() as conn:

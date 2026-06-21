@@ -20,8 +20,13 @@ class StubStateMachine:
     def __init__(self, template="welcome_greeting", params=None):
         self.template = template
         self.params = params or {"clinic_name": "Test Clinic"}
+        self.calls = []
 
-    def process_turn(self, phone, intent, slots, red_flags):
+    def process_turn(self, phone, intent, slots, red_flags, interactive_id=None, profile_name=None):
+        self.calls.append({
+            "phone": phone, "intent": intent, "slots": slots, "red_flags": red_flags,
+            "interactive_id": interactive_id, "profile_name": profile_name,
+        })
         return self.template, self.params
 
 
@@ -57,6 +62,28 @@ def test_handle_message_persists_and_sends(config, tmp_path):
     ]
 
 
+def test_handle_message_interactive_reply_bypasses_parser(config, tmp_path):
+    """Button/list replies must skip the NLU layer entirely — the option id is
+    unambiguous, so there's nothing for the parser to add and no risk of it
+    misreading the title text out of context."""
+    store = Store(tmp_path / "o.db")
+
+    class BoomParser:
+        def parse_message(self, history):
+            raise AssertionError("parser should not be called for interactive replies")
+
+    sm = StubStateMachine(template="request_pain_duration", params={"service_hint": ""})
+    out = RecordingOutbound()
+    orch = Orchestrator(config, store=store, parser=BoomParser(), state_machine=sm, outbound=out)
+
+    orch.handle_message("9199", "1-3 days", interactive_id="1-3 days", profile_name="Asha")
+
+    assert sm.calls == [{
+        "phone": "9199", "intent": "interactive_reply", "slots": {}, "red_flags": [],
+        "interactive_id": "1-3 days", "profile_name": "Asha",
+    }]
+
+
 def test_handle_message_parser_failure_falls_back(config, tmp_path):
     class BoomParser:
         def parse_message(self, history):
@@ -66,5 +93,26 @@ def test_handle_message_parser_failure_falls_back(config, tmp_path):
     orch = Orchestrator(config, store=Store(tmp_path / "o.db"),
                         parser=BoomParser(), outbound=out)
     reply = orch.handle_message("p", "hi")
+    assert "went wrong" in reply.lower()
+    assert out.sent == [("p", reply)]
+
+
+def test_handle_message_store_failure_still_sends_fallback(config):
+    """Regression test: touch_session/add_message used to run outside the
+    try/except, so a DB error there (e.g. the db file got deleted out from under
+    a live process) raised uncaught inside a FastAPI BackgroundTask and silently
+    swallowed the turn — the patient got no reply at all."""
+    class BoomStore:
+        def touch_session(self, phone):
+            raise RuntimeError("db is gone")
+
+        def add_message(self, phone, role, content):
+            raise RuntimeError("db is gone")
+
+    out = RecordingOutbound()
+    orch = Orchestrator(config, store=BoomStore(), parser=StubParser(), state_machine=StubStateMachine(), outbound=out)
+
+    reply = orch.handle_message("p", "hi")
+
     assert "went wrong" in reply.lower()
     assert out.sent == [("p", reply)]
