@@ -82,6 +82,23 @@ def test_parser_failure_fallback(config):
     assert result["red_flags_detected"] == []
 
 
+def _today_iso(config):
+    from zoneinfo import ZoneInfo
+    return dt.datetime.now(ZoneInfo(config.clinic.timezone)).date().isoformat()
+
+
+def _next_occurrence_iso(config, month, day):
+    """The next future date matching month/day (this year, or next if already
+    passed) — mirrors parse_natural_date so these tests aren't time-bombs that
+    break once the hardcoded date slips into the past."""
+    from zoneinfo import ZoneInfo
+    today = dt.datetime.now(ZoneInfo(config.clinic.timezone)).date()
+    cand = dt.date(today.year, month, day)
+    if cand < today:
+        cand = dt.date(today.year + 1, month, day)
+    return cand.isoformat()
+
+
 def test_parser_fallback_resolves_date_change_when_awaiting_date(config):
     # The bot just asked for a date and the LLM is unavailable — the regex
     # fallback must still resolve a spoken date like "23rd June" instead of
@@ -94,12 +111,7 @@ def test_parser_fallback_resolves_date_change_when_awaiting_date(config):
         {"role": "user", "content": "Can I have appointment for 23rd June?"},
     ]
     result = parser.parse_message(history)
-    assert result["slots"]["preferred_date"] == "2026-06-23"
-
-
-def _today_iso(config):
-    from zoneinfo import ZoneInfo
-    return dt.datetime.now(ZoneInfo(config.clinic.timezone)).date().isoformat()
+    assert result["slots"]["preferred_date"] == _next_occurrence_iso(config, 6, 23)
 
 
 def test_parser_fallback_resolves_natural_when_with_time_of_day(config):
@@ -150,7 +162,7 @@ def test_parser_fallback_prefers_date_over_time_when_both_possible(config):
         {"role": "user", "content": "Actually, can we do 23rd June instead?"},
     ]
     result = parser.parse_message(history)
-    assert result["slots"]["preferred_date"] == "2026-06-23"
+    assert result["slots"]["preferred_date"] == _next_occurrence_iso(config, 6, 23)
     assert "preferred_time" not in result["slots"]
 
 
